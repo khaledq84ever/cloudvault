@@ -167,11 +167,19 @@
   <div class="dp-public-link" id="dpPublicLink" hidden>
     <div class="dp-link-label">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
-      Public link <span class="dp-link-expiry" id="dpLinkExpiry"></span>
+      Share link <span class="dp-link-expiry" id="dpLinkExpiry"></span>
     </div>
     <div class="dp-link-row">
       <input type="text" id="dpLinkInput" readonly>
-      <button class="btn btn-primary copy-link-btn" id="dpCopyLink" data-share-url="" title="Copy">Copy</button>
+      <button class="btn btn-primary copy-link-btn" id="dpCopyLink" data-share-url="" title="Copy share link">Copy</button>
+    </div>
+    <div class="dp-link-label" style="margin-top: 14px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Direct download
+    </div>
+    <div class="dp-link-row">
+      <input type="text" id="dpDownloadInput" readonly>
+      <button class="btn btn-primary copy-link-btn" id="dpCopyDownload" data-share-url="" title="Copy direct download link">Copy</button>
     </div>
   </div>
   <div class="dp-info">
@@ -255,6 +263,24 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
+
+<div id="postUploadBanner" class="post-upload-banner" hidden>
+  <div class="pub-head">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
+    <span class="pub-title" id="pubTitle">Uploaded</span>
+    <button class="pub-close" onclick="document.getElementById('postUploadBanner').hidden = true">✕</button>
+  </div>
+  <div class="pub-row">
+    <span class="pub-label">Share link</span>
+    <input type="text" id="pubShareInput" readonly>
+    <button class="btn btn-primary copy-link-btn" id="pubCopyShare" data-share-url="">Copy</button>
+  </div>
+  <div class="pub-row">
+    <span class="pub-label">Download link</span>
+    <input type="text" id="pubDownloadInput" readonly>
+    <button class="btn btn-primary copy-link-btn" id="pubCopyDownload" data-share-url="">Copy</button>
+  </div>
+</div>
 
 <div id="uploadBar" class="upload-bar" hidden>
   <div class="upload-text" id="uploadText">Uploading…</div>

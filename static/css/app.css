@@ -687,6 +687,83 @@ body.with-details .main { padding-right: 340px; }
   100% { transform: scale(1); }
 }
 
+/* Post-upload banner — appears bottom-right after upload with copy buttons */
+.post-upload-banner {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 280;
+  width: min(420px, calc(100vw - 32px));
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow-lg);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  animation: pubSlideIn .3s var(--ease);
+}
+@keyframes pubSlideIn {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.pub-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: var(--success);
+}
+.pub-title {
+  flex: 1;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text);
+}
+.pub-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 14px;
+  transition: background .15s var(--ease), color .15s var(--ease);
+}
+.pub-close:hover { background: rgba(255,255,255,.06); color: var(--text); }
+.pub-row {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+.pub-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pub-row input {
+  padding: 8px 10px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  min-width: 0;
+}
+.pub-row .btn { padding: 8px 14px; font-size: 12px; min-height: 0; }
+@media (max-width: 640px) {
+  .post-upload-banner {
+    left: 12px;
+    right: 12px;
+    bottom: 88px; /* above bottom-nav */
+    width: auto;
+  }
+  .pub-row { grid-template-columns: 70px 1fr auto; }
+}
+
 /* Card variant — corner pinned, only visible on hover */
 .card { position: relative; }
 .card .card-copy {

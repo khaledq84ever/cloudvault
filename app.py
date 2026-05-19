@@ -197,6 +197,7 @@ def _latest_share_for(file_id):
 def file_to_dict(f):
     share = _latest_share_for(f.id)
     share_url = url_for("public_share", token=share.token, _external=True) if share else None
+    download_url = url_for("public_download", token=share.token, _external=True) if share else None
     return {
         "id": f.id,
         "name": f.name,
@@ -209,6 +210,7 @@ def file_to_dict(f):
         "trashed_at": f.trashed_at.isoformat() if f.trashed_at else None,
         "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in f.tags],
         "share_url": share_url,
+        "download_url": download_url,
         "share_token": share.token if share else None,
         "share_expires_at": share.expires_at.isoformat() if share and share.expires_at else None,
         "type": "file",

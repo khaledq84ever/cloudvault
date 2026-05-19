@@ -518,6 +518,10 @@ function openDetails(item) {
     linkWrap.hidden = false;
     $('#dpLinkInput').value = item.share_url;
     $('#dpCopyLink').dataset.shareUrl = item.share_url;
+    if (item.download_url) {
+      $('#dpDownloadInput').value = item.download_url;
+      $('#dpCopyDownload').dataset.shareUrl = item.download_url;
+    }
     const exp = item.share_expires_at ? new Date(item.share_expires_at) : null;
     if (exp) {
       const days = Math.max(0, Math.ceil((exp - Date.now()) / 86400000));
@@ -682,13 +686,16 @@ async function uploadFiles(files, folderId=null) {
   if (!files.length) return;
   const target = folderId !== null ? folderId : state.folder;
   let done = 0;
+  const results = [];
   $('#uploadBar').hidden = false;
   for (const f of files) {
     $('#uploadText').textContent = `Uploading ${f.name} (${done+1}/${files.length})`;
     $('#uploadFill').style.width = '0';
     try {
-      if (f.size > 8 * 1024 * 1024) await uploadChunked(f, target);
-      else await uploadSingle(f, target);
+      let res;
+      if (f.size > 8 * 1024 * 1024) res = await uploadChunked(f, target);
+      else res = await uploadSingle(f, target);
+      if (res) results.push(res);
       done++;
     } catch (err) {
       toast(`Failed: ${f.name} — ${err.message}`, 'error');
@@ -697,8 +704,26 @@ async function uploadFiles(files, folderId=null) {
   $('#uploadBar').hidden = true;
   $('#uploadFill').style.width = '0';
   $('#fileInput').value = '';
-  toast(`Uploaded ${done} file${done > 1 ? 's' : ''}`, 'success');
+  if (results.length >= 1) showPostUploadBanner(results);
+  else toast(`Upload finished (${done})`, 'success');
   loadList(); loadMe();
+}
+
+function showPostUploadBanner(files) {
+  const wrap = $('#postUploadBanner');
+  if (!wrap) { toast(`Uploaded ${files.length} file${files.length > 1 ? 's' : ''}`, 'success'); return; }
+  const first = files[0];
+  const title = files.length === 1
+    ? `Uploaded ${first.name}`
+    : `Uploaded ${files.length} files (showing first)`;
+  $('#pubTitle').textContent = title;
+  $('#pubShareInput').value = first.share_url || '';
+  $('#pubDownloadInput').value = first.download_url || '';
+  $('#pubCopyShare').dataset.shareUrl = first.share_url || '';
+  $('#pubCopyDownload').dataset.shareUrl = first.download_url || '';
+  wrap.hidden = false;
+  clearTimeout(window.__pubT);
+  window.__pubT = setTimeout(() => { wrap.hidden = true; }, 12000);
 }
 
 async function uploadSingle(file, folderId) {
@@ -711,8 +736,15 @@ async function uploadSingle(file, folderId) {
     xhr.upload.onprogress = (ev) => {
       if (ev.lengthComputable) $('#uploadFill').style.width = ((ev.loaded / ev.total) * 100) + '%';
     };
-    xhr.onload = () => xhr.status >= 200 && xhr.status < 300 ? resolve() :
-      reject(new Error((() => { try { return JSON.parse(xhr.responseText).error; } catch { return 'Upload failed'; } })()));
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try { resolve(JSON.parse(xhr.responseText)); } catch { resolve(null); }
+      } else {
+        let msg = 'Upload failed';
+        try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
+        reject(new Error(msg));
+      }
+    };
     xhr.onerror = () => reject(new Error('Network error'));
     xhr.send(fd);
   });
@@ -732,7 +764,7 @@ async function uploadChunked(file, folderId) {
     });
     $('#uploadFill').style.width = (Math.min(offset + chunkSize, file.size) / file.size * 100) + '%';
   }
-  await api(`/api/upload/${uploadId}/complete`, { method:'POST' });
+  return await api(`/api/upload/${uploadId}/complete`, { method:'POST' });
 }
 
 // Drag & drop globally
