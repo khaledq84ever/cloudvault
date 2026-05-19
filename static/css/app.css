@@ -369,6 +369,43 @@ body.with-details .main { padding-right: 340px; }
 .list-row { position: relative; transition: transform .2s; }
 .list-row.swiped::after { content: '🗑 Release to trash'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--danger); font-weight: 600; font-size: 13px; pointer-events: none; }
 
+/* ---------- Billing / plan card ---------- */
+.plan-card-pro { border-color: var(--primary); background: linear-gradient(135deg, rgba(59,130,246,.08), var(--panel)); }
+.plan-card-business { border-color: var(--gold); background: linear-gradient(135deg, rgba(212,168,67,.08), var(--panel)); }
+.payment-card {
+  background: linear-gradient(135deg, #1a1f4a, #2a3070);
+  border-radius: 14px; padding: 22px 24px; color: white;
+  max-width: 360px; box-shadow: 0 10px 30px rgba(0,0,0,.4); margin-top: 16px;
+  font-family: -apple-system, system-ui, sans-serif;
+}
+.pc-brand { font-size: 20px; font-weight: 800; letter-spacing: .1em; opacity: .9; margin-bottom: 28px; }
+.pc-num { font-size: 20px; letter-spacing: .14em; font-family: monospace; margin-bottom: 18px; }
+.pc-meta { display: flex; justify-content: space-between; font-size: 13px; opacity: .85; text-transform: uppercase; }
+.invoice-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); margin-top: 8px; }
+
+/* ---------- Dashboard plan badge in user card ---------- */
+.user-card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+  padding: 14px; margin-top: auto;
+}
+.uc-head { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+.uc-head .avatar { width: 36px; height: 36px; }
+.uc-name { flex: 1; min-width: 0; }
+.uc-name .uname { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uc-name .uemail { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.uc-plan {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
+  background: var(--bg); color: var(--muted); text-transform: uppercase; letter-spacing: .05em;
+}
+.uc-plan.pro { background: rgba(59,130,246,.15); color: var(--primary); }
+.uc-plan.business { background: rgba(212,168,67,.15); color: var(--gold); }
+.uc-storage { font-size: 11px; color: var(--muted); margin-top: 10px; }
+.uc-actions { display: flex; gap: 6px; margin-top: 10px; }
+.uc-actions a { flex: 1; text-align: center; padding: 6px 8px; border-radius: 8px; font-size: 11px; background: var(--bg); color: var(--muted); font-weight: 600; }
+.uc-actions a:hover { color: var(--text); background: var(--panel-2); }
+.uc-actions a.primary { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: white; }
+
 /* ---------- Mobile ---------- */
 @media (max-width: 820px) {
   .drive-page { grid-template-columns: 1fr; }

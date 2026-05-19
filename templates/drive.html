@@ -25,16 +25,21 @@
       <div id="tagsList"></div>
     </div>
   </nav>
-  <div class="storage-bar">
-    <div class="storage-label">Storage</div>
+  <div class="user-card">
+    <div class="uc-head">
+      <a href="{{ url_for('settings_page') }}" class="avatar" id="avatar" title="Settings">U</a>
+      <div class="uc-name">
+        <div class="uname" id="uname">User</div>
+        <div class="uemail" id="uemail">—</div>
+      </div>
+      <span class="uc-plan" id="ucPlan">FREE</span>
+    </div>
     <div class="bar"><div class="bar-fill" id="barFill"></div></div>
-    <div class="storage-text" id="storageText">— / —</div>
-  </div>
-  <div class="user-pill">
-    <a href="/settings" class="avatar" id="avatar" title="Settings">U</a>
-    <div class="user-meta">
-      <div class="uname" id="uname">User</div>
-      <a href="{{ url_for('logout') }}" class="logout">Sign out</a>
+    <div class="uc-storage" id="storageText">— / —</div>
+    <div class="uc-actions">
+      <a href="{{ url_for('billing') }}">💳 Billing</a>
+      <a href="{{ url_for('pricing') }}" class="primary" id="ucUpgrade">⬆ Upgrade</a>
+      <a href="{{ url_for('logout') }}" title="Sign out">⏻</a>
     </div>
   </div>
 </aside>

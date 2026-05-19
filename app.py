@@ -44,8 +44,14 @@ if db_url and db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///" + str(INSTANCE_DIR / "cloudvault.db")
 app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
-app.config["FREE_QUOTA_BYTES"] = int(os.environ.get("QUOTA_BYTES", 15 * 1024 * 1024 * 1024))
 app.config["TRASH_RETENTION_DAYS"] = 30
+
+PLANS = {
+    "free":     {"name": "Free",     "price": 0,      "quota": 15 * 1024**3,   "max_file": 500 * 1024**2},
+    "pro":      {"name": "Pro",      "price": 4.99,   "quota": 100 * 1024**3,  "max_file": 5  * 1024**3},
+    "business": {"name": "Business", "price": 14.99,  "quota": 1024 * 1024**3, "max_file": 20 * 1024**3},
+}
+app.config["FREE_QUOTA_BYTES"] = PLANS["free"]["quota"]
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -62,7 +68,15 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     name = db.Column(db.String(80), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    plan = db.Column(db.String(20), default="free")
+    plan_expires_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def plan_info(self):
+        return PLANS.get(self.plan or "free", PLANS["free"])
+
+    def quota_bytes(self):
+        return self.plan_info()["quota"]
 
 
 class Folder(db.Model):
@@ -249,12 +263,16 @@ def shared_page():
 @app.route("/api/me")
 @login_required
 def api_me():
+    p = current_user.plan_info()
     return jsonify({
         "id": current_user.id,
         "email": current_user.email,
         "name": current_user.name,
+        "plan": current_user.plan or "free",
+        "plan_name": p["name"],
+        "plan_price": p["price"],
         "used": used_bytes(current_user.id),
-        "quota": app.config["FREE_QUOTA_BYTES"],
+        "quota": current_user.quota_bytes(),
     })
 
 
@@ -457,7 +475,7 @@ def api_upload():
     data = f.read()
     size = len(data)
 
-    if used_bytes(current_user.id) + size > app.config["FREE_QUOTA_BYTES"]:
+    if used_bytes(current_user.id) + size > current_user.quota_bytes():
         return jsonify({"error": "Quota exceeded"}), 413
 
     storage_key = uuid.uuid4().hex
@@ -494,7 +512,7 @@ def api_upload_init():
     folder_id = data.get("folder_id")
     if not filename or size <= 0:
         return jsonify({"error": "filename and size required"}), 400
-    if used_bytes(current_user.id) + size > app.config["FREE_QUOTA_BYTES"]:
+    if used_bytes(current_user.id) + size > current_user.quota_bytes():
         return jsonify({"error": "Quota exceeded"}), 413
     upload_id = uuid.uuid4().hex
     sess = UploadSession(
@@ -925,6 +943,32 @@ def api_events():
     })
 
 
+# ---------------- Pricing + Billing ----------------
+@app.route("/pricing")
+def pricing():
+    return render_template("pricing.html", plans=PLANS, user=current_user if current_user.is_authenticated else None)
+
+
+@app.route("/billing")
+@login_required
+def billing():
+    return render_template("billing.html", user=current_user, plans=PLANS, used=used_bytes(current_user.id))
+
+
+@app.route("/api/plan/upgrade", methods=["POST"])
+@login_required
+def api_plan_upgrade():
+    data = request.get_json() or {}
+    target = data.get("plan", "").lower()
+    if target not in PLANS:
+        return jsonify({"error": "Invalid plan"}), 400
+    # Mock checkout — in real impl this is the Stripe webhook handler
+    current_user.plan = target
+    current_user.plan_expires_at = datetime.utcnow() + timedelta(days=30) if target != "free" else None
+    db.session.commit()
+    return jsonify({"ok": True, "plan": target})
+
+
 # ---------------- Healthz ----------------
 @app.route("/healthz")
 def healthz():
@@ -977,6 +1021,11 @@ with app.app_context():
             db.session.execute(db.text("ALTER TABLE share ADD COLUMN password_hash VARCHAR(255)"))
         if "allow_download" not in share_cols:
             db.session.execute(db.text("ALTER TABLE share ADD COLUMN allow_download BOOLEAN DEFAULT 1"))
+        user_cols = [c["name"] for c in db.session.execute(db.text("PRAGMA table_info(user)")).mappings()]
+        if "plan" not in user_cols:
+            db.session.execute(db.text("ALTER TABLE user ADD COLUMN plan VARCHAR(20) DEFAULT 'free'"))
+        if "plan_expires_at" not in user_cols:
+            db.session.execute(db.text("ALTER TABLE user ADD COLUMN plan_expires_at DATETIME"))
         db.session.commit()
     except Exception:
         db.session.rollback()

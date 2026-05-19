@@ -72,12 +72,20 @@ async function api(url, opts={}) {
 async function loadMe() {
   const me = await api('/api/me');
   $('#uname').textContent = me.name;
+  const ue = $('#uemail'); if (ue) ue.textContent = me.email;
   $('#avatar').textContent = (me.name || me.email)[0].toUpperCase();
   const pct = Math.min(100, (me.used / me.quota) * 100);
   $('#barFill').style.width = pct + '%';
-  $('#storageText').textContent = `${fmtSize(me.used)} / ${fmtSize(me.quota)}`;
+  $('#storageText').textContent = `${fmtSize(me.used)} / ${fmtSize(me.quota)} · ${pct.toFixed(0)}%`;
+  const planEl = $('#ucPlan');
+  if (planEl) {
+    planEl.textContent = (me.plan_name || 'Free').toUpperCase();
+    planEl.className = 'uc-plan ' + (me.plan || 'free');
+  }
+  const up = $('#ucUpgrade');
+  if (up) up.style.display = me.plan === 'business' ? 'none' : '';
   if (pct > 90 && !sessionStorage.getItem('quotaWarned')) {
-    toast(`⚠️ Storage ${pct.toFixed(0)}% full`, 'error');
+    toast(`⚠️ Storage ${pct.toFixed(0)}% full — upgrade for more`, 'error');
     sessionStorage.setItem('quotaWarned', '1');
   }
 }
