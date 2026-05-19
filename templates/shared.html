@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shared by me — CloudVault</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<nav class="nav">
+  <a href="/" class="logo">
+    <svg width="28" height="28" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="#3b82f6"/></svg>
+    <span>CloudVault</span>
+  </a>
+  <div class="nav-links"><a href="{{ url_for('drive') }}">← Back to drive</a></div>
+</nav>
+
+<div class="settings-page">
+  <h1>Shared links</h1>
+  <p class="muted" style="margin: -10px 0 24px; color: var(--muted);">Manage public share links</p>
+  <div class="shares-list" id="list"><p class="muted">Loading…</p></div>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+<script>
+function fmtSize(b){if(!b)return '0 B';const u=['B','KB','MB','GB','TB'];let i=0;while(b>=1024&&i<u.length-1){b/=1024;i++;}return b.toFixed(b<10?1:0)+' '+u[i];}
+function toast(m,t=''){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t;e.hidden=false;setTimeout(()=>e.hidden=true,2400);}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+async function load() {
+  const items = await fetch('/api/shares').then(r=>r.json());
+  const list = document.getElementById('list');
+  if (!items.length) { list.innerHTML = '<p class="muted">No shared files yet.</p>'; return; }
+  list.innerHTML = items.map(s => `
+    <div class="share-item">
+      <div class="ico">🔗</div>
+      <div class="meta">
+        <div class="name">${esc(s.file.name)}</div>
+        <div class="sub">${fmtSize(s.file.size)} · ${s.downloads} downloads · ${s.expires_at ? 'expires ' + new Date(s.expires_at).toLocaleString() : 'no expiry'}</div>
+      </div>
+      <div class="acts">
+        <button class="btn btn-ghost" onclick="copy('${s.url}')">Copy</button>
+        <button class="btn btn-ghost danger" onclick="revoke('${s.token}')">Revoke</button>
+      </div>
+    </div>
+  `).join('');
+}
+function copy(u) { navigator.clipboard.writeText(u); toast('Copied', 'success'); }
+async function revoke(t) {
+  if (!confirm('Revoke this share link?')) return;
+  await fetch('/api/shares/'+t, { method:'DELETE' });
+  toast('Revoked', 'success');
+  load();
+}
+load();
+</script>
+</body>
+</html>

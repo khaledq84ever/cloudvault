@@ -18,6 +18,7 @@
     <a class="side-link active" data-view="my">🗂 My Drive</a>
     <a class="side-link" data-view="recent">🕒 Recent</a>
     <a class="side-link" data-view="starred">⭐ Starred</a>
+    <a class="side-link" data-view="shared">🔗 Shared by me</a>
     <a class="side-link" data-view="trash">🗑 Trash</a>
   </nav>
   <div class="storage-bar">
@@ -26,7 +27,7 @@
     <div class="storage-text" id="storageText">— / —</div>
   </div>
   <div class="user-pill">
-    <div class="avatar" id="avatar">U</div>
+    <a href="/settings" class="avatar" id="avatar" title="Settings">U</a>
     <div class="user-meta">
       <div class="uname" id="uname">User</div>
       <a href="{{ url_for('logout') }}" class="logout">Sign out</a>
@@ -46,12 +47,45 @@
     </div>
   </header>
 
-  <div class="breadcrumb" id="breadcrumb">
-    <span class="crumb root" data-folder="">My Drive</span>
+  <div class="toolbar">
+    <div class="breadcrumb" id="breadcrumb">
+      <span class="crumb root" data-folder="">My Drive</span>
+    </div>
+    <div class="toolbar-right">
+      <select id="sortSelect" class="select">
+        <option value="name|asc">Name A–Z</option>
+        <option value="name|desc">Name Z–A</option>
+        <option value="date|desc">Newest first</option>
+        <option value="date|asc">Oldest first</option>
+        <option value="size|desc">Largest first</option>
+        <option value="size|asc">Smallest first</option>
+      </select>
+      <button class="icon-btn" id="viewGrid" title="Grid view">▦</button>
+      <button class="icon-btn active" id="viewList" title="List view">☰</button>
+    </div>
+  </div>
+
+  <!-- Bulk action bar (shown when items are selected) -->
+  <div class="action-bar" id="actionBar" hidden>
+    <span class="sel-count" id="selCount">0 selected</span>
+    <div class="sep"></div>
+    <button class="btn btn-ghost" data-bulk="download">⬇ Download</button>
+    <button class="btn btn-ghost" data-bulk="move">📂 Move</button>
+    <button class="btn btn-ghost" data-bulk="star">⭐ Star</button>
+    <button class="btn btn-ghost" data-bulk="restore" id="bulkRestore" hidden>↩ Restore</button>
+    <button class="btn btn-ghost danger" data-bulk="trash">🗑 Trash</button>
+    <button class="btn btn-ghost danger" data-bulk="delete" id="bulkDelete" hidden>🗑 Delete forever</button>
+    <button class="icon-btn" id="clearSel" title="Clear">✕</button>
+  </div>
+
+  <!-- Trash banner -->
+  <div class="trash-banner" id="trashBanner" hidden>
+    <span>Items in trash are deleted permanently after 30 days.</span>
+    <button class="btn btn-ghost danger" id="emptyTrash">Empty trash</button>
   </div>
 
   <div class="drop-zone" id="dropZone">
-    <div id="grid" class="grid"></div>
+    <div id="grid" class="grid view-list"></div>
     <div class="empty" id="empty" hidden>
       <div class="empty-ico">📂</div>
       <h3>Nothing here yet</h3>
@@ -62,6 +96,27 @@
     </div>
   </div>
 </main>
+
+<!-- Details panel -->
+<aside class="details-panel" id="detailsPanel" hidden>
+  <button class="dp-close" id="dpClose">✕</button>
+  <div class="dp-ico" id="dpIco">📄</div>
+  <h3 id="dpName">—</h3>
+  <div class="dp-meta" id="dpMeta">—</div>
+  <div class="dp-actions">
+    <button class="btn btn-ghost btn-block" id="dpPreview">👁 Preview</button>
+    <button class="btn btn-ghost btn-block" id="dpDownload">⬇ Download</button>
+    <button class="btn btn-ghost btn-block" id="dpShare">🔗 Share</button>
+    <button class="btn btn-ghost btn-block" id="dpRename">✏ Rename</button>
+    <button class="btn btn-ghost btn-block" id="dpMove">📂 Move to…</button>
+    <button class="btn btn-ghost btn-block danger" id="dpDelete">🗑 Trash</button>
+  </div>
+  <div class="dp-info">
+    <div class="info-row"><span>Type</span><span id="dpType">—</span></div>
+    <div class="info-row"><span>Size</span><span id="dpSize">—</span></div>
+    <div class="info-row"><span>Uploaded</span><span id="dpDate">—</span></div>
+  </div>
+</aside>
 
 <!-- Bottom mobile nav -->
 <nav class="bottom-nav">
@@ -74,12 +129,14 @@
 
 <!-- Context menu -->
 <div id="ctxMenu" class="ctx-menu" hidden>
-  <button data-action="open">👁 Preview</button>
+  <button data-action="open">👁 Preview / Open</button>
   <button data-action="download">⬇ Download</button>
   <button data-action="share">🔗 Share link</button>
   <button data-action="star">⭐ Star</button>
   <button data-action="rename">✏ Rename</button>
-  <button data-action="delete" class="danger">🗑 Move to trash</button>
+  <button data-action="move">📂 Move to…</button>
+  <button data-action="restore" class="restore-only" hidden>↩ Restore</button>
+  <button data-action="delete" class="danger">🗑 Trash</button>
 </div>
 
 <!-- Share modal -->
@@ -92,7 +149,7 @@
       <button class="btn btn-primary" id="copyBtn">Copy</button>
     </div>
     <label class="expiry-label">Expires in</label>
-    <select id="shareExpiry">
+    <select id="shareExpiry" class="select">
       <option value="">Never</option>
       <option value="1">1 hour</option>
       <option value="24">24 hours</option>
@@ -104,16 +161,30 @@
   </div>
 </div>
 
+<!-- Move to folder modal -->
+<div class="modal" id="moveModal" hidden>
+  <div class="modal-card">
+    <h3>Move to…</h3>
+    <p class="muted">Select a destination folder</p>
+    <div class="folder-tree" id="folderTree"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="moveCancel">Cancel</button>
+      <button class="btn btn-primary" id="moveConfirm" disabled>Move here</button>
+    </div>
+  </div>
+</div>
+
 <!-- Preview modal -->
 <div class="modal preview-modal" id="previewModal" hidden>
   <button class="preview-close" id="previewClose">✕</button>
+  <button class="preview-nav prev" id="prevBtn">‹</button>
+  <button class="preview-nav next" id="nextBtn">›</button>
   <div class="preview-body" id="previewBody"></div>
+  <div class="preview-foot" id="previewFoot"></div>
 </div>
 
-<!-- Toast -->
 <div id="toast" class="toast" hidden></div>
 
-<!-- Upload progress -->
 <div id="uploadBar" class="upload-bar" hidden>
   <div class="upload-text" id="uploadText">Uploading…</div>
   <div class="upload-track"><div class="upload-fill" id="uploadFill"></div></div>
