@@ -1,0 +1,57 @@
+{
+  "name": "CloudVault — Cloud Storage",
+  "short_name": "CloudVault",
+  "description": "The cleanest cloud storage on the internet. Upload, share, preview, sync across devices in real time.",
+  "start_url": "/drive",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#07091a",
+  "theme_color": "#0d1129",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/static/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Upload",
+      "short_name": "Upload",
+      "description": "Quickly upload files to CloudVault",
+      "url": "/drive?upload=1",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Shared",
+      "short_name": "Shared",
+      "description": "View files shared with you",
+      "url": "/shared",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Settings",
+      "short_name": "Settings",
+      "description": "Account and storage settings",
+      "url": "/settings",
+      "icons": [{ "src": "/static/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

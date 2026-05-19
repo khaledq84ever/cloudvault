@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1129">
+<title>Offline — CloudVault</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
+</head>
+<body class="auth-page">
+<div class="auth-card" style="text-align:center;">
+  <div style="font-size:64px; margin-bottom:16px;">☁️</div>
+  <h1>You're offline</h1>
+  <p class="sub">CloudVault needs an internet connection to sync your files. Reconnect and we'll pick up right where you left off.</p>
+  <button class="btn btn-primary btn-block" onclick="location.reload()">Try again</button>
+  <p class="alt"><a href="/drive">Back to my drive</a></p>
+</div>
+<script>
+  window.addEventListener('online', () => location.reload());
+</script>
+</body>
+</html>

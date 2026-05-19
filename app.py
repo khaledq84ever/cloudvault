@@ -197,6 +197,33 @@ def emit(user_id, event, payload=None):
         pass
 
 
+# ---------------- PWA routes (root-scope) ----------------
+@app.route("/sw.js")
+def service_worker():
+    """Serve service worker from root so it controls full origin scope."""
+    resp = app.send_static_file("sw.js")
+    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    resp.headers["Service-Worker-Allowed"] = "/"
+    return resp
+
+
+@app.route("/manifest.webmanifest")
+def manifest():
+    resp = app.send_static_file("manifest.webmanifest")
+    resp.headers["Content-Type"] = "application/manifest+json"
+    return resp
+
+
+@app.route("/favicon.ico")
+def favicon():
+    return app.send_static_file("icons/favicon-32.png")
+
+
+@app.route("/offline")
+def offline():
+    return render_template("offline.html")
+
+
 # ---------------- Auth routes ----------------
 @app.route("/")
 def index():
