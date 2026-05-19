@@ -3,6 +3,11 @@
 
 /* ---------- Base ---------- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* CRITICAL: make HTML5 `hidden` attribute work even on elements with display: flex/grid.
+   Without this, modals/menus/banners with class rules setting `display: flex` render
+   over the page on load instead of staying hidden until JS sets hidden=false. */
+[hidden] { display: none !important; }
 :root {
   --bg: #07091a;
   --bg-2: #0d1129;
