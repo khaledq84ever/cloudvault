@@ -34,6 +34,12 @@ TMP_UPLOAD_DIR.mkdir(exist_ok=True, parents=True)
 
 app = Flask(__name__)
 
+# Trust the Railway/proxy X-Forwarded-* headers so url_for(_external=True)
+# returns https:// URLs (otherwise auto-share links come out as insecure http://).
+from werkzeug.middleware.proxy_fix import ProxyFix
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+app.config["PREFERRED_URL_SCHEME"] = "https"
+
 # Cache-bust static assets per process (changes on every deploy)
 _CACHE_BUST = secrets.token_hex(4)
 
