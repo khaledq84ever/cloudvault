@@ -869,7 +869,9 @@ def api_my_shares():
         f = File.query.get(s.file_id)
         if not f or f.trashed_at: continue
         out.append({
-            "token": s.token, "url": url_for("public_share", token=s.token, _external=True),
+            "token": s.token,
+            "url": url_for("public_share", token=s.token, _external=True),
+            "download_url": url_for("public_download", token=s.token, _external=True),
             "file": {"id": f.id, "name": f.name, "size": f.size, "mime": f.mime},
             "downloads": s.downloads,
             "has_password": bool(s.password_hash),

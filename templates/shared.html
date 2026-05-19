@@ -20,8 +20,13 @@
 {% include '_appnav.html' %}
 
 <div class="settings-page">
-  <h1>Shared links</h1>
-  <p class="muted" style="margin: -10px 0 24px; color: var(--muted);">Manage public share links</p>
+  <div class="shares-head">
+    <div>
+      <h1>Upload history & links</h1>
+      <p class="muted">Every file you upload gets a public link valid for 7 days. Manage them here.</p>
+    </div>
+    <div class="shares-stats" id="sharesStats">—</div>
+  </div>
   <div class="shares-list" id="list"><p class="muted">Loading…</p></div>
 </div>
 
@@ -30,32 +35,69 @@
 function fmtSize(b){if(!b)return '0 B';const u=['B','KB','MB','GB','TB'];let i=0;while(b>=1024&&i<u.length-1){b/=1024;i++;}return b.toFixed(b<10?1:0)+' '+u[i];}
 function toast(m,t=''){const e=document.getElementById('toast');e.textContent=m;e.className='toast '+t;e.hidden=false;setTimeout(()=>e.hidden=true,2400);}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtDate(d){if(!d)return '—';const dt=new Date(d);const ago=(Date.now()-dt.getTime())/1000;if(ago<60)return 'just now';if(ago<3600)return Math.round(ago/60)+'m ago';if(ago<86400)return Math.round(ago/3600)+'h ago';if(ago<604800)return Math.round(ago/86400)+'d ago';return dt.toLocaleDateString();}
+function daysLeft(d){if(!d)return null;const ms=new Date(d).getTime()-Date.now();if(ms<=0)return 0;return Math.ceil(ms/86400000);}
 
 async function load() {
   const items = await fetch('/api/shares').then(r=>r.json());
   const list = document.getElementById('list');
-  if (!items.length) { list.innerHTML = '<p class="muted">No shared files yet.</p>'; return; }
-  list.innerHTML = items.map(s => `
-    <div class="share-item">
-      <div class="ico">🔗</div>
-      <div class="meta">
-        <div class="name">${esc(s.file.name)}</div>
-        <div class="sub">${fmtSize(s.file.size)} · ${s.downloads} downloads · ${s.expires_at ? 'expires ' + new Date(s.expires_at).toLocaleString() : 'no expiry'}</div>
+  const stats = document.getElementById('sharesStats');
+  const totalDl = items.reduce((a,b)=>a+(b.downloads||0),0);
+  stats.innerHTML = `<span class="stat-num">${items.length}</span> active link${items.length===1?'':'s'} · <span class="stat-num">${totalDl}</span> total download${totalDl===1?'':'s'}`;
+  if (!items.length) { list.innerHTML = '<div class="empty-shares"><div class="ico-lg">🔗</div><h3>No shared links yet</h3><p class="muted">Upload a file from /drive and we\\'ll generate a public link automatically.</p><a href="/drive" class="btn btn-primary">Go to my drive</a></div>'; return; }
+  list.innerHTML = items.map((s, i) => {
+    const dleft = daysLeft(s.expires_at);
+    const expClass = dleft !== null && dleft <= 1 ? 'expiring' : '';
+    return `
+    <div class="share-card" data-token="${s.token}">
+      <div class="share-card-head">
+        <div class="share-card-ico">📄</div>
+        <div class="share-card-info">
+          <div class="share-card-name">${esc(s.file.name)}</div>
+          <div class="share-card-meta">${fmtSize(s.file.size)} · uploaded ${fmtDate(s.created_at)} · <strong>${s.downloads}</strong> download${s.downloads===1?'':'s'}</div>
+        </div>
+        <div class="share-card-expiry ${expClass}">${dleft === null ? 'No expiry' : dleft === 0 ? 'Expired' : `${dleft} day${dleft===1?'':'s'} left`}</div>
       </div>
-      <div class="acts">
-        <button class="btn btn-ghost" onclick="copy('${s.url}')">Copy</button>
-        <button class="btn btn-ghost danger" onclick="revoke('${s.token}')">Revoke</button>
+      <div class="share-url-row">
+        <span class="share-url-label">SHARE LINK</span>
+        <input type="text" readonly value="${esc(s.url)}">
+        <button class="btn btn-primary" data-copy="${esc(s.url)}">Copy</button>
+      </div>
+      <div class="share-url-row">
+        <span class="share-url-label">DIRECT DOWNLOAD</span>
+        <input type="text" readonly value="${esc(s.download_url)}">
+        <button class="btn btn-primary" data-copy="${esc(s.download_url)}">Copy</button>
+      </div>
+      <div class="share-card-actions">
+        <a class="btn btn-ghost" href="${esc(s.url)}" target="_blank" rel="noopener">Open preview ↗</a>
+        <a class="btn btn-ghost" href="${esc(s.download_url)}">Download now ⬇</a>
+        <button class="btn btn-ghost danger" data-revoke="${s.token}">Revoke link</button>
       </div>
     </div>
-  `).join('');
+    `;
+  }).join('');
 }
-function copy(u) { navigator.clipboard.writeText(u); toast('Copied', 'success'); }
-async function revoke(t) {
-  if (!confirm('Revoke this share link?')) return;
-  await fetch('/api/shares/'+t, { method:'DELETE' });
-  toast('Revoked', 'success');
-  load();
-}
+document.addEventListener('click', async (e) => {
+  const copyBtn = e.target.closest('[data-copy]');
+  if (copyBtn) {
+    const url = copyBtn.dataset.copy;
+    try {
+      await navigator.clipboard.writeText(url);
+      copyBtn.textContent = '✓ Copied';
+      setTimeout(() => copyBtn.textContent = 'Copy', 1500);
+      toast('Link copied', 'success');
+    } catch { toast('Failed to copy', 'error'); }
+    return;
+  }
+  const revBtn = e.target.closest('[data-revoke]');
+  if (revBtn) {
+    const t = revBtn.dataset.revoke;
+    if (!confirm('Revoke this link? Anyone using it will lose access immediately.')) return;
+    await fetch('/api/shares/'+t, { method:'DELETE' });
+    toast('Link revoked', 'success');
+    load();
+  }
+});
 load();
 </script>
 <script src="/static/js/appnav.js?v={{ cb }}" defer></script>
