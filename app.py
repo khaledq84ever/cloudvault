@@ -163,7 +163,34 @@ def used_bytes(user_id):
     return int(total or 0)
 
 
+AUTO_SHARE_DAYS = 7
+
+
+def _auto_share_for(file_record):
+    """Auto-create a public share link with no password, 7-day expiry."""
+    token = secrets.token_urlsafe(16)
+    expires_at = datetime.utcnow() + timedelta(days=AUTO_SHARE_DAYS)
+    share = Share(
+        token=token, file_id=file_record.id, expires_at=expires_at,
+        password_hash=None, allow_download=True,
+    )
+    db.session.add(share)
+    return share
+
+
+def _latest_share_for(file_id):
+    """Return the most recent non-expired Share for a file, or None."""
+    share = Share.query.filter_by(file_id=file_id).order_by(Share.created_at.desc()).first()
+    if not share:
+        return None
+    if share.expires_at and share.expires_at < datetime.utcnow():
+        return None
+    return share
+
+
 def file_to_dict(f):
+    share = _latest_share_for(f.id)
+    share_url = url_for("public_share", token=share.token, _external=True) if share else None
     return {
         "id": f.id,
         "name": f.name,
@@ -175,6 +202,9 @@ def file_to_dict(f):
         "created_at": f.created_at.isoformat() if f.created_at else None,
         "trashed_at": f.trashed_at.isoformat() if f.trashed_at else None,
         "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in f.tags],
+        "share_url": share_url,
+        "share_token": share.token if share else None,
+        "share_expires_at": share.expires_at.isoformat() if share and share.expires_at else None,
         "type": "file",
     }
 
@@ -531,6 +561,8 @@ def api_upload():
         has_thumb=has_thumb,
     )
     db.session.add(record)
+    db.session.flush()
+    _auto_share_for(record)
     db.session.commit()
     emit(current_user.id, "file_created", file_to_dict(record))
     return jsonify(file_to_dict(record))
@@ -605,6 +637,8 @@ def api_upload_complete(upload_id):
         has_thumb=has_thumb,
     )
     db.session.add(record)
+    db.session.flush()
+    _auto_share_for(record)
     db.session.delete(sess)
     db.session.commit()
     staging.unlink(missing_ok=True)
@@ -1064,6 +1098,35 @@ with app.app_context():
         db.session.commit()
     except Exception:
         db.session.rollback()
+
+    # Backfill auto-shares: every non-trashed file with no active share gets one
+    try:
+        now = datetime.utcnow()
+        files_without_active_share = db.session.execute(db.text("""
+            SELECT f.id FROM file f
+            WHERE f.trashed_at IS NULL
+              AND NOT EXISTS (
+                SELECT 1 FROM share s
+                WHERE s.file_id = f.id
+                  AND (s.expires_at IS NULL OR s.expires_at > :now)
+              )
+        """), {"now": now}).fetchall()
+        for row in files_without_active_share:
+            fid = row[0]
+            share = Share(
+                token=secrets.token_urlsafe(16),
+                file_id=fid,
+                expires_at=now + timedelta(days=AUTO_SHARE_DAYS),
+                password_hash=None,
+                allow_download=True,
+            )
+            db.session.add(share)
+        if files_without_active_share:
+            db.session.commit()
+            app.logger.info("auto-share backfill: created %d shares", len(files_without_active_share))
+    except Exception as e:
+        db.session.rollback()
+        app.logger.warning("auto-share backfill failed: %s", e)
 
 
 # Start APScheduler for trash purge (skip in debug auto-reload child)

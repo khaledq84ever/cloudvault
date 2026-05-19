@@ -642,6 +642,109 @@ body.with-details .main { padding-right: 340px; }
 }
 
 /* ========================================================================
+   Auto-share link — copy buttons + details-panel public-link section
+   ======================================================================== */
+.copy-link-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  transition: background .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease), transform .12s var(--ease);
+  cursor: pointer;
+}
+.copy-link-btn:hover {
+  color: var(--primary);
+  background: rgba(99,102,241,.1);
+  border-color: rgba(99,102,241,.25);
+}
+.copy-link-btn.copied {
+  color: var(--success);
+  background: rgba(34,197,94,.12);
+  border-color: rgba(34,197,94,.4);
+  transform: scale(.95);
+}
+.copy-link-btn.copied svg { animation: copyPulse .35s var(--ease); }
+@keyframes copyPulse {
+  0% { transform: scale(.7); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Card variant — corner pinned, only visible on hover */
+.card { position: relative; }
+.card .card-copy {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  background: rgba(7,9,26,.7);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-color: var(--border-soft);
+  opacity: 0;
+  transform: translateY(-4px);
+  z-index: 2;
+}
+.card:hover .card-copy, .card .card-copy:focus { opacity: 1; transform: translateY(0); }
+.card .card-copy.copied { opacity: 1; }
+
+/* Details-panel public link */
+.dp-public-link {
+  background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(168,85,247,.06));
+  border: 1px solid rgba(99,102,241,.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 14px 0 6px;
+}
+.dp-link-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 10px;
+}
+.dp-link-label svg { opacity: .9; }
+.dp-link-expiry {
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+  font-weight: 500;
+  margin-left: 4px;
+}
+.dp-link-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.dp-link-row input {
+  flex: 1;
+  padding: 9px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  min-width: 0;
+}
+.dp-link-row .btn {
+  padding: 9px 14px;
+  font-size: 13px;
+  min-height: 0;
+}
+
+/* ========================================================================
    AppNav — unified top nav (logo + section links + user menu dropdown)
    ======================================================================== */
 .appnav {

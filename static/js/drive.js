@@ -186,9 +186,14 @@ function buildGridCard(item) {
   const thumb = (item._type === 'file' && item.has_thumb)
     ? `<div class="card-thumb" ${thumbStyle(item)}></div>`
     : `<div class="card-ico">${ico}</div>`;
+  const cardShare = (item._type === 'file' && item.share_url)
+    ? `<button class="copy-link-btn card-copy" data-share-url="${escapeHtml(item.share_url)}" title="Copy public link" aria-label="Copy public link">
+         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
+       </button>`
+    : '';
   card.innerHTML = `
     <input type="checkbox" class="card-check" ${state.selected.has(key) ? 'checked' : ''}>
-    ${star}${trashDays}
+    ${star}${trashDays}${cardShare}
     ${thumb}
     <div class="card-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
     <div class="card-meta">${meta}</div>
@@ -213,12 +218,17 @@ function buildListRow(item) {
   const thumbCell = (item._type === 'file' && item.has_thumb)
     ? `<span class="row-thumb" ${thumbStyle(item)}></span>`
     : `<span class="row-ico">${ico}</span>`;
+  const rowShare = (item._type === 'file' && item.share_url)
+    ? `<button class="icon-btn copy-link-btn" data-share-url="${escapeHtml(item.share_url)}" title="Copy public link" aria-label="Copy public link">
+         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
+       </button>`
+    : '';
   row.innerHTML = `
     <span class="lh-check"><input type="checkbox" class="card-check" ${state.selected.has(key) ? 'checked' : ''}></span>
     <span class="lh-name">${thumbCell}<span class="row-name">${escapeHtml(item.name)}</span>${star}${tagDots}${trashDays}</span>
     <span class="lh-size">${meta}</span>
     <span class="lh-date">${fmtDate(item.created_at)}</span>
-    <span class="lh-act"><button class="icon-btn row-menu" title="More">⋯</button></span>
+    <span class="lh-act">${rowShare}<button class="icon-btn row-menu" title="More">⋯</button></span>
   `;
   wireItem(row, item);
   return row;
@@ -502,6 +512,22 @@ function openDetails(item) {
   };
   $('#dpShare').onclick = () => { if (item._type === 'file') openShare(item.id); };
   $('#dpShare').style.display = item._type === 'file' ? 'flex' : 'none';
+  // Auto-share public link section
+  const linkWrap = $('#dpPublicLink');
+  if (item._type === 'file' && item.share_url) {
+    linkWrap.hidden = false;
+    $('#dpLinkInput').value = item.share_url;
+    $('#dpCopyLink').dataset.shareUrl = item.share_url;
+    const exp = item.share_expires_at ? new Date(item.share_expires_at) : null;
+    if (exp) {
+      const days = Math.max(0, Math.ceil((exp - Date.now()) / 86400000));
+      $('#dpLinkExpiry').textContent = `· expires in ${days} day${days === 1 ? '' : 's'}`;
+    } else {
+      $('#dpLinkExpiry').textContent = '';
+    }
+  } else {
+    linkWrap.hidden = true;
+  }
   $('#dpRename').onclick = () => {
     const name = prompt('New name:', item.name);
     if (!name || name === item.name) return;
@@ -799,6 +825,32 @@ function startEventStream() {
     es.onerror = () => { es.close(); setTimeout(startEventStream, 5000); };
   } catch {}
 }
+
+// ---------- Copy share link (delegated) ----------
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.copy-link-btn');
+  if (!btn) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const url = btn.dataset.shareUrl;
+  if (!url) return;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    btn.classList.add('copied');
+    setTimeout(() => btn.classList.remove('copied'), 1200);
+    toast('Public link copied — anyone with the link can view for 7 days', 'success');
+  } catch (err) {
+    toast('Failed to copy link', 'error');
+  }
+});
 
 // ---------- Init ----------
 loadMe();

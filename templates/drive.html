@@ -192,6 +192,16 @@
     <button class="btn btn-ghost btn-block danger" id="dpDelete">🗑 Trash</button>
   </div>
   <div id="dpTags"></div>
+  <div class="dp-public-link" id="dpPublicLink" hidden>
+    <div class="dp-link-label">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
+      Public link <span class="dp-link-expiry" id="dpLinkExpiry"></span>
+    </div>
+    <div class="dp-link-row">
+      <input type="text" id="dpLinkInput" readonly>
+      <button class="btn btn-primary copy-link-btn" id="dpCopyLink" data-share-url="" title="Copy">Copy</button>
+    </div>
+  </div>
   <div class="dp-info">
     <div class="info-row"><span>Type</span><span id="dpType">—</span></div>
     <div class="info-row"><span>Size</span><span id="dpSize">—</span></div>
