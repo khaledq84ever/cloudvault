@@ -44,7 +44,7 @@ async function load() {
   const stats = document.getElementById('sharesStats');
   const totalDl = items.reduce((a,b)=>a+(b.downloads||0),0);
   stats.innerHTML = `<span class="stat-num">${items.length}</span> active link${items.length===1?'':'s'} · <span class="stat-num">${totalDl}</span> total download${totalDl===1?'':'s'}`;
-  if (!items.length) { list.innerHTML = '<div class="empty-shares"><div class="ico-lg">🔗</div><h3>No shared links yet</h3><p class="muted">Upload a file from /drive and we\\'ll generate a public link automatically.</p><a href="/drive" class="btn btn-primary">Go to my drive</a></div>'; return; }
+  if (!items.length) { list.innerHTML = '<div class="empty-shares"><div class="ico-lg">🔗</div><h3>No shared links yet</h3><p class="muted">Upload a file from /drive and we will generate a public link automatically.</p><a href="/drive" class="btn btn-primary">Go to my drive</a></div>'; return; }
   list.innerHTML = items.map((s, i) => {
     const dleft = daysLeft(s.expires_at);
     const expClass = dleft !== null && dleft <= 1 ? 'expiring' : '';
