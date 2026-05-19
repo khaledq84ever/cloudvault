@@ -641,6 +641,16 @@ body.with-details .main { padding-right: 340px; }
   .float-card { font-size: 12px; padding: 10px 14px; }
 }
 
+/* Icon-only button variant (Home icon, etc.) — square 44x44 with just an SVG */
+.btn.btn-icon-only {
+  width: 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn.btn-icon-only svg { display: block; }
+
 /* ========================================================================
    Auto-share link — copy buttons + details-panel public-link section
    ======================================================================== */

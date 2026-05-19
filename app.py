@@ -268,6 +268,13 @@ def index():
     return render_template("landing.html")
 
 
+@app.route("/home")
+def home():
+    """Public landing page, accessible even when logged in.
+    Logged-in users see the landing with a 'My Drive' button via the appnav."""
+    return render_template("landing.html")
+
+
 @app.route("/login", methods=["GET", "POST"])
 @limiter.limit("10 per minute", methods=["POST"])
 def login():
