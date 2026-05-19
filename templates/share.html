@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ file.name }} — CloudVault</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="share-page">
+<nav class="nav">
+  <a href="/" class="logo">
+    <svg width="28" height="28" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="#3b82f6"/></svg>
+    <span>CloudVault</span>
+  </a>
+</nav>
+<div class="share-wrap">
+  <div class="share-card">
+    <div class="share-ico">📄</div>
+    <h1>{{ file.name }}</h1>
+    <p class="muted">{{ '%.2f'|format(file.size/1024/1024) }} MB · shared via CloudVault</p>
+    <a href="{{ url_for('public_download', token=share.token) }}" class="btn btn-primary btn-lg">⬇ Download</a>
+    <p class="alt">Want your own cloud storage? <a href="{{ url_for('register') }}">Get 15 GB free →</a></p>
+  </div>
+</div>
+</body>
+</html>

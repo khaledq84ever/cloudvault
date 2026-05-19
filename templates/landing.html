@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudVault — Your files, anywhere</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="landing">
+<nav class="nav">
+  <a href="/" class="logo">
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="#3b82f6"/></svg>
+    <span>CloudVault</span>
+  </a>
+  <div class="nav-links">
+    <a href="{{ url_for('login') }}">Log in</a>
+    <a href="{{ url_for('register') }}" class="btn btn-primary">Sign up free</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <h1>Your files,<br><span class="grad">anywhere you go.</span></h1>
+  <p>15 GB free secure cloud storage. Upload, share, and access anything from any device.</p>
+  <div class="hero-cta">
+    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get 15 GB free →</a>
+    <a href="{{ url_for('login') }}" class="btn btn-ghost btn-lg">Sign in</a>
+  </div>
+  <div class="hero-art">
+    <div class="float-card c1">📄 contract.pdf</div>
+    <div class="float-card c2">🖼 vacation.jpg</div>
+    <div class="float-card c3">🎬 video.mp4</div>
+    <div class="float-card c4">📊 budget.xlsx</div>
+  </div>
+</header>
+
+<section class="features">
+  <div class="feat"><div class="ico">🔒</div><h3>Bank-grade security</h3><p>AES-256 encrypted at rest and in transit.</p></div>
+  <div class="feat"><div class="ico">⚡</div><h3>Blazing fast</h3><p>Upload and stream files at full speed.</p></div>
+  <div class="feat"><div class="ico">🔗</div><h3>Share with anyone</h3><p>Password-protected links with expiry.</p></div>
+  <div class="feat"><div class="ico">📱</div><h3>Works everywhere</h3><p>Mobile, tablet, desktop — same vault.</p></div>
+</section>
+
+<section class="pricing">
+  <h2>Simple, fair pricing</h2>
+  <div class="plans">
+    <div class="plan">
+      <h3>Free</h3>
+      <div class="price">$0<span>/mo</span></div>
+      <ul><li>✓ 15 GB storage</li><li>✓ Unlimited devices</li><li>✓ Share links</li><li>✓ Mobile + web</li></ul>
+      <a href="{{ url_for('register') }}" class="btn btn-outline">Start free</a>
+    </div>
+    <div class="plan featured">
+      <span class="badge">Popular</span>
+      <h3>Pro</h3>
+      <div class="price">$4.99<span>/mo</span></div>
+      <ul><li>✓ 100 GB storage</li><li>✓ Password-protected links</li><li>✓ Priority support</li><li>✓ 30-day file history</li></ul>
+      <a href="{{ url_for('register') }}" class="btn btn-primary">Go Pro</a>
+    </div>
+    <div class="plan">
+      <h3>Business</h3>
+      <div class="price">$14.99<span>/mo</span></div>
+      <ul><li>✓ 1 TB storage</li><li>✓ Team workspace</li><li>✓ Admin controls</li><li>✓ 24/7 support</li></ul>
+      <a href="{{ url_for('register') }}" class="btn btn-outline">Try Business</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <p>© 2026 CloudVault. Built for safekeeping.</p>
+</footer>
+</body>
+</html>

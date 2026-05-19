@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — CloudVault</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="auth-page">
+<div class="auth-card">
+  <a href="/" class="logo center">
+    <svg width="36" height="36" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="#3b82f6"/></svg>
+    <span>CloudVault</span>
+  </a>
+  <h1>Welcome back</h1>
+  <p class="sub">Sign in to access your files</p>
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}<div class="alert {{cat}}">{{msg}}</div>{% endfor %}
+  {% endwith %}
+  <form method="POST">
+    <label>Email</label>
+    <input type="email" name="email" required autofocus>
+    <label>Password</label>
+    <input type="password" name="password" required>
+    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+  </form>
+  <p class="alt">New to CloudVault? <a href="{{ url_for('register') }}">Create an account</a></p>
+</div>
+</body>
+</html>

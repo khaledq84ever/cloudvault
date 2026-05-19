@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Drive — CloudVault</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body class="drive-page">
+
+<aside class="sidebar">
+  <a href="/" class="logo">
+    <svg width="26" height="26" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="#3b82f6"/></svg>
+    <span>CloudVault</span>
+  </a>
+  <button class="btn btn-primary btn-block btn-new" id="btnNew">＋ New</button>
+  <nav class="side-nav">
+    <a class="side-link active" data-view="my">🗂 My Drive</a>
+    <a class="side-link" data-view="recent">🕒 Recent</a>
+    <a class="side-link" data-view="starred">⭐ Starred</a>
+    <a class="side-link" data-view="trash">🗑 Trash</a>
+  </nav>
+  <div class="storage-bar">
+    <div class="storage-label">Storage</div>
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <div class="storage-text" id="storageText">— / —</div>
+  </div>
+  <div class="user-pill">
+    <div class="avatar" id="avatar">U</div>
+    <div class="user-meta">
+      <div class="uname" id="uname">User</div>
+      <a href="{{ url_for('logout') }}" class="logout">Sign out</a>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <header class="topbar">
+    <div class="search-wrap">
+      <input type="text" id="search" placeholder="Search files...">
+    </div>
+    <div class="top-actions">
+      <button class="btn btn-ghost" id="btnNewFolder">📁 New folder</button>
+      <button class="btn btn-primary" id="btnUpload">⬆ Upload</button>
+      <input type="file" id="fileInput" multiple hidden>
+    </div>
+  </header>
+
+  <div class="breadcrumb" id="breadcrumb">
+    <span class="crumb root" data-folder="">My Drive</span>
+  </div>
+
+  <div class="drop-zone" id="dropZone">
+    <div id="grid" class="grid"></div>
+    <div class="empty" id="empty" hidden>
+      <div class="empty-ico">📂</div>
+      <h3>Nothing here yet</h3>
+      <p>Drop files anywhere or click <b>Upload</b> to get started.</p>
+    </div>
+    <div class="drop-overlay" id="dropOverlay">
+      <div class="drop-msg">⬇ Drop to upload</div>
+    </div>
+  </div>
+</main>
+
+<!-- Bottom mobile nav -->
+<nav class="bottom-nav">
+  <a class="bn-link active" data-view="my">🗂<span>Files</span></a>
+  <a class="bn-link" data-view="recent">🕒<span>Recent</span></a>
+  <a class="bn-link bn-up" id="bnUpload">＋</a>
+  <a class="bn-link" data-view="starred">⭐<span>Starred</span></a>
+  <a class="bn-link" data-view="trash">🗑<span>Trash</span></a>
+</nav>
+
+<!-- Context menu -->
+<div id="ctxMenu" class="ctx-menu" hidden>
+  <button data-action="open">👁 Preview</button>
+  <button data-action="download">⬇ Download</button>
+  <button data-action="share">🔗 Share link</button>
+  <button data-action="star">⭐ Star</button>
+  <button data-action="rename">✏ Rename</button>
+  <button data-action="delete" class="danger">🗑 Move to trash</button>
+</div>
+
+<!-- Share modal -->
+<div class="modal" id="shareModal" hidden>
+  <div class="modal-card">
+    <h3>Share link</h3>
+    <p class="muted">Anyone with this link can view and download.</p>
+    <div class="share-row">
+      <input type="text" id="shareUrl" readonly>
+      <button class="btn btn-primary" id="copyBtn">Copy</button>
+    </div>
+    <label class="expiry-label">Expires in</label>
+    <select id="shareExpiry">
+      <option value="">Never</option>
+      <option value="1">1 hour</option>
+      <option value="24">24 hours</option>
+      <option value="168">7 days</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="shareClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Preview modal -->
+<div class="modal preview-modal" id="previewModal" hidden>
+  <button class="preview-close" id="previewClose">✕</button>
+  <div class="preview-body" id="previewBody"></div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast" hidden></div>
+
+<!-- Upload progress -->
+<div id="uploadBar" class="upload-bar" hidden>
+  <div class="upload-text" id="uploadText">Uploading…</div>
+  <div class="upload-track"><div class="upload-fill" id="uploadFill"></div></div>
+</div>
+
+<script src="{{ url_for('static', filename='js/drive.js') }}"></script>
+</body>
+</html>
