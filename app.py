@@ -33,6 +33,14 @@ TMP_UPLOAD_DIR = DATA_DIR / "tmp_uploads"
 TMP_UPLOAD_DIR.mkdir(exist_ok=True, parents=True)
 
 app = Flask(__name__)
+
+# Cache-bust static assets per process (changes on every deploy)
+_CACHE_BUST = secrets.token_hex(4)
+
+
+@app.context_processor
+def inject_cache_bust():
+    return {"cb": _CACHE_BUST}
 secret_env = os.environ.get("SECRET_KEY")
 if not secret_env and os.environ.get("FLASK_ENV") == "production":
     raise RuntimeError("SECRET_KEY must be set in production")
