@@ -17,21 +17,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
 </head>
 <body class="landing">
-<nav class="nav">
-  <a href="/" class="logo">
-    <svg width="28" height="28" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="#3b82f6"/></svg>
-    <span>CloudVault</span>
-  </a>
-  <div class="nav-links">
-    {% if user %}
-      <a href="{{ url_for('drive') }}">My drive</a>
-      <a href="{{ url_for('billing') }}" class="btn btn-ghost">Billing</a>
-    {% else %}
-      <a href="{{ url_for('login') }}">Log in</a>
-      <a href="{{ url_for('register') }}" class="btn btn-primary">Sign up free</a>
-    {% endif %}
-  </div>
-</nav>
+{% include '_appnav.html' %}
 
 <header class="hero" style="padding: 60px 8% 40px;">
   <h1>Simple, <span class="grad">honest pricing</span></h1>
@@ -172,6 +158,7 @@ document.getElementById('ccNum').oninput = (e) => {
   e.target.value = e.target.value.replace(/\D/g, '').replace(/(\d{4})/g, '$1 ').trim().slice(0, 19);
 };
 </script>
+<script src="/static/js/appnav.js?v={{ cb }}" defer></script>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
 </body>
 </html>

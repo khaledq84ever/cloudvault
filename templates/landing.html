@@ -17,21 +17,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
 </head>
 <body class="landing">
-<nav class="nav">
-  <a href="/" class="logo">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#6366f1"/><stop offset="100%" stop-color="#a855f7"/></linearGradient></defs>
-      <path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="url(#g)"/>
-    </svg>
-    <span>CloudVault</span>
-  </a>
-  <div class="nav-links">
-    <a href="{{ url_for('pricing') }}">Pricing</a>
-    <a href="#features">Features</a>
-    <a href="{{ url_for('login') }}">Log in</a>
-    <a href="{{ url_for('register') }}" class="btn btn-primary">Sign up free</a>
-  </div>
-</nav>
+{% include '_appnav.html' %}
 
 <header class="hero">
   <span class="hero-eyebrow"><span class="dot"></span>15 GB free · no credit card</span>
@@ -161,6 +147,7 @@
 <footer class="foot">
   <p>© 2026 CloudVault. Built for safekeeping. <a href="{{ url_for('pricing') }}" style="margin-left: 8px;">Pricing</a> · <a href="mailto:khaledq8tv@gmail.com">Contact</a></p>
 </footer>
+<script src="/static/js/appnav.js?v={{ cb }}" defer></script>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
 </body>
 </html>

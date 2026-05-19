@@ -17,20 +17,11 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
 </head>
 <body>
-<nav class="nav">
-  <a href="/" class="logo">
-    <svg width="28" height="28" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="#3b82f6"/></svg>
-    <span>CloudVault</span>
-  </a>
-  <div class="nav-links">
-    <a href="{{ url_for('drive') }}">← Back to drive</a>
-  </div>
-</nav>
+{% include '_appnav.html' %}
 
 <div class="settings-page">
   <div class="settings-bar">
     <h1>Settings</h1>
-    <a href="{{ url_for('drive') }}" class="btn btn-ghost">Back to drive</a>
   </div>
 
   <div class="settings-card">
@@ -110,6 +101,7 @@ document.getElementById('savePw').onclick = async () => {
   }
 };
 </script>
+<script src="/static/js/appnav.js?v={{ cb }}" defer></script>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
 </body>
 </html>
