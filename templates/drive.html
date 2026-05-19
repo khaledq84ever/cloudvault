@@ -20,6 +20,10 @@
     <a class="side-link" data-view="starred">⭐ Starred</a>
     <a class="side-link" data-view="shared">🔗 Shared by me</a>
     <a class="side-link" data-view="trash">🗑 Trash</a>
+    <div class="tags-section">
+      <div class="tags-label">TAGS</div>
+      <div id="tagsList"></div>
+    </div>
   </nav>
   <div class="storage-bar">
     <div class="storage-label">Storage</div>
@@ -100,7 +104,7 @@
 <!-- Details panel -->
 <aside class="details-panel" id="detailsPanel" hidden>
   <button class="dp-close" id="dpClose">✕</button>
-  <div class="dp-ico" id="dpIco">📄</div>
+  <div id="dpThumbWrap"><div class="dp-ico">📄</div></div>
   <h3 id="dpName">—</h3>
   <div class="dp-meta" id="dpMeta">—</div>
   <div class="dp-actions">
@@ -111,6 +115,7 @@
     <button class="btn btn-ghost btn-block" id="dpMove">📂 Move to…</button>
     <button class="btn btn-ghost btn-block danger" id="dpDelete">🗑 Trash</button>
   </div>
+  <div id="dpTags"></div>
   <div class="dp-info">
     <div class="info-row"><span>Type</span><span id="dpType">—</span></div>
     <div class="info-row"><span>Size</span><span id="dpSize">—</span></div>
@@ -143,7 +148,7 @@
 <div class="modal" id="shareModal" hidden>
   <div class="modal-card">
     <h3>Share link</h3>
-    <p class="muted">Anyone with this link can view and download.</p>
+    <p class="muted">Configure who can access this file</p>
     <div class="share-row">
       <input type="text" id="shareUrl" readonly>
       <button class="btn btn-primary" id="copyBtn">Copy</button>
@@ -155,6 +160,12 @@
       <option value="24">24 hours</option>
       <option value="168">7 days</option>
     </select>
+    <label class="expiry-label">Password (optional)</label>
+    <input type="text" id="sharePassword" placeholder="Leave empty for no password" class="select" style="width:100%;">
+    <label class="check-row" style="margin-top:14px;">
+      <input type="checkbox" id="shareAllowDownload" checked>
+      <span>Allow download</span>
+    </label>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="shareClose">Close</button>
     </div>

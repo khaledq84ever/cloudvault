@@ -15,10 +15,22 @@
 </nav>
 <div class="share-wrap">
   <div class="share-card">
-    <div class="share-ico">📄</div>
+    {% if file.mime and file.mime.startswith('image/') %}
+      <img src="{{ url_for('public_preview', token=share.token) }}" style="max-width:100%; max-height:60vh; border-radius:12px;">
+    {% elif file.mime and file.mime.startswith('video/') %}
+      <video src="{{ url_for('public_preview', token=share.token) }}" controls style="max-width:100%; max-height:60vh; border-radius:12px;"></video>
+    {% elif file.mime and 'pdf' in file.mime %}
+      <iframe src="{{ url_for('public_preview', token=share.token) }}" style="width:90vw; max-width:700px; height:70vh; border:0; border-radius:12px;"></iframe>
+    {% else %}
+      <div class="share-ico">📄</div>
+    {% endif %}
     <h1>{{ file.name }}</h1>
     <p class="muted">{{ '%.2f'|format(file.size/1024/1024) }} MB · shared via CloudVault</p>
-    <a href="{{ url_for('public_download', token=share.token) }}" class="btn btn-primary btn-lg">⬇ Download</a>
+    {% if share.allow_download %}
+      <a href="{{ url_for('public_download', token=share.token) }}" class="btn btn-primary btn-lg">⬇ Download</a>
+    {% else %}
+      <p class="muted" style="margin-top:14px;">👁 View-only — downloads disabled by the owner.</p>
+    {% endif %}
     <p class="alt">Want your own cloud storage? <a href="{{ url_for('register') }}">Get 15 GB free →</a></p>
   </div>
 </div>
