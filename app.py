@@ -131,7 +131,9 @@ class Share(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(40), unique=True, nullable=False)
     alias = db.Column(db.String(60), unique=True, nullable=True, index=True)
-    file_id = db.Column(db.Integer, db.ForeignKey("file.id"), nullable=False)
+    # Exactly one of file_id / folder_id is set per row.
+    file_id = db.Column(db.Integer, db.ForeignKey("file.id"), nullable=True)
+    folder_id = db.Column(db.Integer, db.ForeignKey("folder.id"), nullable=True)
     expires_at = db.Column(db.DateTime, nullable=True)
     password_hash = db.Column(db.String(255), nullable=True)
     allow_download = db.Column(db.Boolean, default=True)
@@ -1067,25 +1069,77 @@ def api_share(file_id):
     })
 
 
+@app.route("/api/share/folder/<int:folder_id>", methods=["POST"])
+@login_required
+def api_share_folder(folder_id):
+    """Create a public link that lets anyone browse + download a folder
+    (and its subfolders). Same expiry/password options as file shares."""
+    folder = Folder.query.filter_by(id=folder_id, owner_id=current_user.id).first_or_404()
+    data = request.get_json() or {}
+    expires_hours = data.get("expires_hours")
+    password = data.get("password")
+    allow_download = data.get("allow_download", True)
+    token = secrets.token_urlsafe(16)
+    expires_at = datetime.utcnow() + timedelta(hours=int(expires_hours)) if expires_hours else None
+    pw_hash = generate_password_hash(password) if password else None
+    share = Share(
+        token=token, folder_id=folder.id, expires_at=expires_at,
+        password_hash=pw_hash, allow_download=bool(allow_download)
+    )
+    db.session.add(share)
+    db.session.commit()
+    return jsonify({
+        "token": token,
+        "alias": None,
+        "url": url_for("public_share", token=token, _external=True),
+        "qr_url": url_for("public_share_qr", token=token, _external=True),
+        "expires_at": expires_at.isoformat() if expires_at else None,
+        "has_password": bool(pw_hash),
+        "allow_download": share.allow_download,
+        "kind": "folder",
+    })
+
+
 @app.route("/api/shares")
 @login_required
 def api_my_shares():
-    shares = Share.query.join(File).filter(File.owner_id == current_user.id).order_by(Share.created_at.desc()).all()
+    shares = (Share.query
+              .outerjoin(File, Share.file_id == File.id)
+              .outerjoin(Folder, Share.folder_id == Folder.id)
+              .filter((File.owner_id == current_user.id) | (Folder.owner_id == current_user.id))
+              .order_by(Share.created_at.desc()).all())
     out = []
     for s in shares:
-        f = File.query.get(s.file_id)
-        if not f or f.trashed_at: continue
-        out.append({
-            "token": s.token,
-            "url": url_for("public_share", token=s.token, _external=True),
-            "download_url": url_for("public_download", token=s.token, _external=True),
-            "file": {"id": f.id, "name": f.name, "size": f.size, "mime": f.mime},
-            "downloads": s.downloads,
-            "has_password": bool(s.password_hash),
-            "allow_download": s.allow_download,
-            "expires_at": s.expires_at.isoformat() if s.expires_at else None,
-            "created_at": s.created_at.isoformat(),
-        })
+        if s.file_id:
+            f = File.query.get(s.file_id)
+            if not f or f.trashed_at: continue
+            out.append({
+                "token": s.token,
+                "kind": "file",
+                "url": url_for("public_share", token=s.token, _external=True),
+                "download_url": url_for("public_download", token=s.token, _external=True),
+                "file": {"id": f.id, "name": f.name, "size": f.size, "mime": f.mime},
+                "downloads": s.downloads,
+                "has_password": bool(s.password_hash),
+                "allow_download": s.allow_download,
+                "expires_at": s.expires_at.isoformat() if s.expires_at else None,
+                "created_at": s.created_at.isoformat(),
+            })
+        elif s.folder_id:
+            fo = Folder.query.get(s.folder_id)
+            if not fo or fo.trashed_at: continue
+            out.append({
+                "token": s.token,
+                "kind": "folder",
+                "url": url_for("public_share", token=s.token, _external=True),
+                "download_url": url_for("public_folder_zip", token=s.token, _external=True),
+                "folder": {"id": fo.id, "name": fo.name},
+                "downloads": s.downloads,
+                "has_password": bool(s.password_hash),
+                "allow_download": s.allow_download,
+                "expires_at": s.expires_at.isoformat() if s.expires_at else None,
+                "created_at": s.created_at.isoformat(),
+            })
     return jsonify(out)
 
 
@@ -1093,8 +1147,16 @@ def api_my_shares():
 @login_required
 def api_revoke_share(token):
     s = Share.query.filter_by(token=token).first_or_404()
-    f = File.query.get_or_404(s.file_id)
-    if f.owner_id != current_user.id: abort(403)
+    if s.file_id:
+        f = File.query.get_or_404(s.file_id)
+        owner_id = f.owner_id
+    elif s.folder_id:
+        fo = Folder.query.get_or_404(s.folder_id)
+        owner_id = fo.owner_id
+    else:
+        abort(404)
+    if owner_id != current_user.id:
+        abort(403)
     db.session.delete(s)
     db.session.commit()
     return jsonify({"ok": True})
@@ -1118,9 +1180,6 @@ def public_share(token):
         abort(404)
     if not _share_valid(share):
         return render_template("share_expired.html"), 410
-    f = File.query.get_or_404(share.file_id)
-    if f.trashed_at:
-        return render_template("share_expired.html"), 410
 
     # Password gate (session-scoped — keyed on the canonical token so an
     # unlock survives whether the user came in via alias or token).
@@ -1135,7 +1194,118 @@ def public_share(token):
         if not session.get(unlocked_key):
             return render_template("share_password.html", token=token, error=None)
 
-    return render_template("share.html", file=f, share=share)
+    if share.file_id:
+        f = File.query.get_or_404(share.file_id)
+        if f.trashed_at:
+            return render_template("share_expired.html"), 410
+        return render_template("share.html", file=f, share=share)
+
+    # Folder share — optional ?path=<folder_id> for nested browsing.
+    root = Folder.query.get_or_404(share.folder_id)
+    if root.trashed_at:
+        return render_template("share_expired.html"), 410
+    sub_id = request.args.get("path", type=int)
+    current = root
+    if sub_id:
+        candidate = Folder.query.get(sub_id)
+        if candidate and _folder_is_descendant_of(candidate, root):
+            current = candidate
+    files = File.query.filter_by(folder_id=current.id, owner_id=root.owner_id, trashed_at=None).order_by(File.name).all()
+    subfolders = Folder.query.filter_by(parent_id=current.id, owner_id=root.owner_id, trashed_at=None).order_by(Folder.name).all()
+    breadcrumb = _folder_breadcrumb(current, root)
+    return render_template(
+        "share_folder.html",
+        share=share, root=root, current=current,
+        files=files, subfolders=subfolders, breadcrumb=breadcrumb,
+    )
+
+
+def _folder_is_descendant_of(folder, root):
+    """True if `folder` is `root` itself or sits anywhere underneath it.
+    Walks up parent_id; bounded to avoid pathological cycles."""
+    cur = folder
+    for _ in range(64):
+        if cur is None:
+            return False
+        if cur.id == root.id:
+            return True
+        cur = Folder.query.get(cur.parent_id) if cur.parent_id else None
+    return False
+
+
+def _folder_breadcrumb(current, root):
+    """Build a [(id, name)] list from root down to current (inclusive)."""
+    chain = []
+    cur = current
+    for _ in range(64):
+        if cur is None:
+            break
+        chain.append((cur.id, cur.name))
+        if cur.id == root.id:
+            break
+        cur = Folder.query.get(cur.parent_id) if cur.parent_id else None
+    return list(reversed(chain))
+
+
+@app.route("/s/<token>/zip")
+@limiter.limit("30 per hour")
+def public_folder_zip(token):
+    """Stream the whole shared folder as a zip download."""
+    share = _resolve_share(token)
+    if not share or not share.folder_id: abort(404)
+    if not _share_valid(share): abort(410)
+    if not share.allow_download: abort(403)
+    if share.password_hash and not session.get(f"share_ok_{share.token}"):
+        return redirect(url_for("public_share", token=token))
+    folder = Folder.query.get_or_404(share.folder_id)
+    if folder.trashed_at: abort(410)
+    share.downloads += 1
+    db.session.commit()
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        _add_folder_to_zip(zf, folder, prefix=folder.name)
+    buf.seek(0)
+    safe_name = secure_filename(folder.name) or "folder"
+    return send_file(buf, mimetype="application/zip", as_attachment=True,
+                     download_name=f"{safe_name}.zip")
+
+
+@app.route("/s/<token>/file/<int:file_id>/download")
+@limiter.limit("200 per hour")
+def public_folder_file_download(token, file_id):
+    """Download a single file from inside a shared folder."""
+    share = _resolve_share(token)
+    if not share or not share.folder_id: abort(404)
+    if not _share_valid(share): abort(410)
+    if not share.allow_download: abort(403)
+    if share.password_hash and not session.get(f"share_ok_{share.token}"):
+        return redirect(url_for("public_share", token=token))
+    root = Folder.query.get_or_404(share.folder_id)
+    f = File.query.get_or_404(file_id)
+    if f.owner_id != root.owner_id or f.trashed_at: abort(404)
+    # Must live somewhere under the shared root.
+    f_folder = Folder.query.get(f.folder_id) if f.folder_id else None
+    if not f_folder or not _folder_is_descendant_of(f_folder, root): abort(404)
+    share.downloads += 1
+    db.session.commit()
+    return _serve_file_data(f, attachment=True)
+
+
+@app.route("/s/<token>/file/<int:file_id>/preview")
+def public_folder_file_preview(token, file_id):
+    """Inline-preview a file from inside a shared folder (images, video, etc)."""
+    share = _resolve_share(token)
+    if not share or not share.folder_id: abort(404)
+    if not _share_valid(share): abort(410)
+    if share.password_hash and not session.get(f"share_ok_{share.token}"):
+        abort(401)
+    root = Folder.query.get_or_404(share.folder_id)
+    f = File.query.get_or_404(file_id)
+    if f.owner_id != root.owner_id or f.trashed_at: abort(404)
+    f_folder = Folder.query.get(f.folder_id) if f.folder_id else None
+    if not f_folder or not _folder_is_descendant_of(f_folder, root): abort(404)
+    return _serve_file_data(f, attachment=False)
 
 
 @app.route("/s/<token>/download")
@@ -1145,6 +1315,10 @@ def public_download(token):
     if not share: abort(404)
     if not _share_valid(share): abort(410)
     if not share.allow_download: abort(403)
+    # Folder shares redirect to the zip endpoint so legacy /s/<t>/download
+    # links keep working uniformly whatever the share kind is.
+    if share.folder_id:
+        return redirect(url_for("public_folder_zip", token=token))
     f = File.query.get_or_404(share.file_id)
     if f.trashed_at: abort(410)
     if share.password_hash and not session.get(f"share_ok_{share.token}"):
@@ -1187,8 +1361,13 @@ _ALIAS_RE = _re.compile(r"^[a-z0-9][a-z0-9-]{2,58}[a-z0-9]$")
 def api_share_set_alias(token):
     """Owner sets/clears a pretty alias for one of their shares."""
     share = Share.query.filter_by(token=token).first_or_404()
-    file = File.query.get_or_404(share.file_id)
-    if file.owner_id != current_user.id:
+    if share.file_id:
+        owner_id = File.query.get_or_404(share.file_id).owner_id
+    elif share.folder_id:
+        owner_id = Folder.query.get_or_404(share.folder_id).owner_id
+    else:
+        abort(404)
+    if owner_id != current_user.id:
         abort(403)
 
     if request.method == "DELETE":
@@ -1224,6 +1403,8 @@ def public_preview(token):
     share = _resolve_share(token)
     if not share: abort(404)
     if not _share_valid(share): abort(410)
+    if not share.file_id:
+        abort(404)  # Folder shares preview per-file via /s/<t>/file/<id>/preview.
     f = File.query.get_or_404(share.file_id)
     if f.trashed_at: abort(410)
     if share.password_hash and not session.get(f"share_ok_{share.token}"):
@@ -1599,6 +1780,67 @@ def _add_share_alias_column_if_missing():
         db.session.rollback()
 
 
+def _add_folder_share_support():
+    """Extend the Share table to support folder sharing:
+       - Add a nullable folder_id FK to folder.id (idempotent).
+       - Drop NOT NULL on file_id so a folder share leaves it empty.
+    Works on both Postgres (prod) and SQLite (dev). Failures are
+    swallowed because re-running a no-op migration must not crash boot."""
+    try:
+        db.session.execute(db.text("ALTER TABLE share ADD COLUMN folder_id INTEGER"))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()  # Column likely already exists
+    dialect = db.session.bind.dialect.name
+    if dialect == "postgresql":
+        try:
+            db.session.execute(db.text("ALTER TABLE share ALTER COLUMN file_id DROP NOT NULL"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+    else:
+        # SQLite: only rewrite the table if file_id is still NOT NULL.
+        try:
+            cols = list(db.session.execute(db.text("PRAGMA table_info(share)")).mappings())
+            file_col = next((c for c in cols if c["name"] == "file_id"), None)
+            if file_col and file_col["notnull"]:
+                # Verbatim rebuild: copy data into a new schema-compliant table.
+                db.session.execute(db.text("""
+                    CREATE TABLE share__new (
+                      id INTEGER PRIMARY KEY,
+                      token VARCHAR(40) NOT NULL UNIQUE,
+                      alias VARCHAR(60),
+                      file_id INTEGER,
+                      folder_id INTEGER,
+                      expires_at DATETIME,
+                      password_hash VARCHAR(255),
+                      allow_download BOOLEAN DEFAULT 1,
+                      downloads INTEGER DEFAULT 0,
+                      created_at DATETIME
+                    )
+                """))
+                col_names = [c["name"] for c in cols]
+                select_cols = ", ".join(
+                    name if name in col_names else "NULL"
+                    for name in ["id","token","alias","file_id","folder_id",
+                                 "expires_at","password_hash","allow_download",
+                                 "downloads","created_at"]
+                )
+                db.session.execute(db.text(
+                    f"INSERT INTO share__new SELECT {select_cols} FROM share"
+                ))
+                db.session.execute(db.text("DROP TABLE share"))
+                db.session.execute(db.text("ALTER TABLE share__new RENAME TO share"))
+                db.session.execute(db.text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_share_alias ON share (alias)"
+                ))
+                db.session.commit()
+                app.logger.info("share table rebuilt to allow folder shares")
+        except Exception as e:
+            db.session.rollback()
+            app.logger.warning("sqlite share rebuild failed: %s", e)
+
+
 def _make_shares_permanent_once():
     """Convert pre-existing no-password auto-shares to permanent links.
     Auto-shares used to expire after 7 days; if you'd given someone a link,
@@ -1623,6 +1865,7 @@ with app.app_context():
     db.create_all()
     _migrate_sqlite_to_postgres()
     _add_share_alias_column_if_missing()
+    _add_folder_share_support()
     _make_shares_permanent_once()
     _demote_all_users_to_free()
     # Lightweight migration: add missing columns on SQLite

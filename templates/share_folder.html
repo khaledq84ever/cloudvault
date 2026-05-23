@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1129">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CloudVault">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="msapplication-TileColor" content="#0d1129">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
+<title>{{ root.name }} — CloudVault</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
+</head>
+<body class="share-page">
+<nav class="nav">
+  <a href="/" class="logo">
+    <svg width="28" height="28" viewBox="0 0 24 24"><path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="#3b82f6"/></svg>
+    <span>CloudVault</span>
+  </a>
+</nav>
+<div class="share-folder-wrap">
+  <div class="share-folder-head">
+    <div class="share-folder-title">
+      <span class="share-folder-icon">📁</span>
+      <div>
+        <h1>{{ root.name }}</h1>
+        <p class="muted">Shared folder · {{ files|length }} file{{ '' if files|length == 1 else 's' }}{% if subfolders %} · {{ subfolders|length }} subfolder{{ '' if subfolders|length == 1 else 's' }}{% endif %}</p>
+      </div>
+    </div>
+    {% if share.allow_download %}
+      <a href="{{ url_for('public_folder_zip', token=share.token) }}" class="btn btn-primary">⬇ Download all (zip)</a>
+    {% endif %}
+  </div>
+
+  <nav class="share-crumbs" aria-label="Folder breadcrumb">
+    {% for fid, name in breadcrumb %}
+      {% if loop.last %}
+        <span class="crumb crumb-current">{{ name }}</span>
+      {% else %}
+        <a class="crumb" href="{{ url_for('public_share', token=share.token) }}{% if fid != root.id %}?path={{ fid }}{% endif %}">{{ name }}</a>
+        <span class="crumb-sep">/</span>
+      {% endif %}
+    {% endfor %}
+  </nav>
+
+  {% if not files and not subfolders %}
+    <div class="share-folder-empty">
+      <div class="empty-ico">📂</div>
+      <p>This folder is empty.</p>
+    </div>
+  {% else %}
+    <ul class="share-folder-list">
+      {% for sf in subfolders %}
+        <li class="sf-row">
+          <a class="sf-name" href="{{ url_for('public_share', token=share.token) }}?path={{ sf.id }}">
+            <span class="sf-ico">📁</span>
+            <span class="sf-label">{{ sf.name }}</span>
+          </a>
+          <span class="sf-meta">Folder</span>
+        </li>
+      {% endfor %}
+      {% for f in files %}
+        <li class="sf-row">
+          {% if f.mime and (f.mime.startswith('image/') or f.mime.startswith('video/') or 'pdf' in f.mime) %}
+            <a class="sf-name" href="{{ url_for('public_folder_file_preview', token=share.token, file_id=f.id) }}" target="_blank" rel="noopener">
+              <span class="sf-ico">{% if f.mime.startswith('image/') %}🖼{% elif f.mime.startswith('video/') %}🎬{% else %}📄{% endif %}</span>
+              <span class="sf-label">{{ f.name }}</span>
+            </a>
+          {% else %}
+            <span class="sf-name">
+              <span class="sf-ico">📄</span>
+              <span class="sf-label">{{ f.name }}</span>
+            </span>
+          {% endif %}
+          <span class="sf-meta">{{ '%.2f'|format(f.size/1024/1024) }} MB</span>
+          {% if share.allow_download %}
+            <a class="sf-dl" href="{{ url_for('public_folder_file_download', token=share.token, file_id=f.id) }}" title="Download">⬇</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <p class="alt share-folder-cta">Want your own cloud storage? <a href="{{ url_for('register') }}">Get started free →</a></p>
+</div>
+<script src="/static/js/pwa.js?v={{ cb }}" defer></script>
+</body>
+</html>

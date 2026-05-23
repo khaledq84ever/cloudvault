@@ -485,7 +485,7 @@ $('#ctxMenu').addEventListener('click', async (e) => {
   else if (act === 'download') {
     if (type === 'file') window.location = `/api/files/${id}/download`;
     else window.location = `/api/folders/${id}/download`;
-  } else if (act === 'share' && type === 'file') openShare(id);
+  } else if (act === 'share') openShare(id, type);
   else if (act === 'star' && type === 'file') {
     await api(`/api/files/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ starred: !item.starred }) });
     toast(item.starred ? 'Unstarred' : 'Starred', 'success'); loadList();
@@ -535,8 +535,8 @@ function openDetails(item) {
     if (item._type === 'file') window.location = `/api/files/${item.id}/download`;
     else window.location = `/api/folders/${item.id}/download`;
   };
-  $('#dpShare').onclick = () => { if (item._type === 'file') openShare(item.id); };
-  $('#dpShare').style.display = item._type === 'file' ? 'flex' : 'none';
+  $('#dpShare').onclick = () => openShare(item.id, item._type);
+  $('#dpShare').style.display = 'flex';
   // Auto-share public link section
   const linkWrap = $('#dpPublicLink');
   if (item._type === 'file' && item.share_url) {
@@ -635,22 +635,33 @@ async function bulkMove(targetFolder) {
 }
 
 // ---------- Share ----------
-let currentShareFileId = null;
+let currentShareId = null;       // file_id or folder_id
+let currentShareKind = 'file';   // 'file' | 'folder'
 let currentShareToken = null;
-async function openShare(fileId) {
-  currentShareFileId = fileId;
+async function openShare(id, kind='file') {
+  currentShareId = id;
+  currentShareKind = kind;
   currentShareToken = null;
   $('#shareExpiry').value = '';
   $('#sharePassword').value = '';
   $('#shareAllowDownload').checked = true;
   $('#shareAlias').value = '';
+  const titleEl = document.getElementById('shareModalTitle');
+  const subEl = document.getElementById('shareModalSubtitle');
+  if (titleEl) titleEl.textContent = kind === 'folder' ? 'Share folder' : 'Share link';
+  if (subEl) subEl.textContent = kind === 'folder'
+    ? 'Anyone with this link can browse and download the folder'
+    : 'Configure who can access this file';
   setAliasHint('Lowercase letters, digits, hyphens. 4–60 chars.', '');
   await regenShare();
   $('#shareModal').hidden = false;
 }
 async function regenShare() {
-  if (!currentShareFileId) return;
-  const data = await api(`/api/share/${currentShareFileId}`, {
+  if (!currentShareId) return;
+  const endpoint = currentShareKind === 'folder'
+    ? `/api/share/folder/${currentShareId}`
+    : `/api/share/${currentShareId}`;
+  const data = await api(endpoint, {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({
       expires_hours: $('#shareExpiry').value || null,
