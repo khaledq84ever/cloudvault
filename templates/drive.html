@@ -198,10 +198,40 @@
 <nav class="bottom-nav">
   <a class="bn-link active" data-view="my">🗂<span>Files</span></a>
   <a class="bn-link" data-view="recent">🕒<span>Recent</span></a>
-  <a class="bn-link bn-up" id="bnUpload">＋</a>
+  <a class="bn-link bn-up" id="bnUpload" role="button" aria-haspopup="dialog">＋</a>
   <a class="bn-link" data-view="starred">⭐<span>Starred</span></a>
   <a class="bn-link" data-view="trash">🗑<span>Trash</span></a>
 </nav>
+
+<!-- Mobile action sheet, opened by the bottom-nav "+" button -->
+<div class="action-sheet" id="actionSheet" hidden role="dialog" aria-label="Add new" aria-modal="true">
+  <div class="action-sheet-backdrop" id="actionSheetBackdrop"></div>
+  <div class="action-sheet-card">
+    <div class="action-sheet-handle" aria-hidden="true"></div>
+    <button type="button" class="action-item" id="asUpload">
+      <span class="action-icon">⬆️</span>
+      <span class="action-label">
+        <strong>Upload files</strong>
+        <small>Pick photos, videos, or any file</small>
+      </span>
+    </button>
+    <button type="button" class="action-item" id="asCamera">
+      <span class="action-icon">📷</span>
+      <span class="action-label">
+        <strong>Take photo or video</strong>
+        <small>Capture and upload from your camera</small>
+      </span>
+    </button>
+    <button type="button" class="action-item" id="asNewFolder">
+      <span class="action-icon">📁</span>
+      <span class="action-label">
+        <strong>New folder</strong>
+        <small>Organise files into a folder</small>
+      </span>
+    </button>
+    <button type="button" class="action-item" id="asCancel">Cancel</button>
+  </div>
+</div>
 
 <!-- Context menu -->
 <div id="ctxMenu" class="ctx-menu" hidden>

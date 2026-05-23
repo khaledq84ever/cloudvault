@@ -395,6 +395,47 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 .alias-hint { font-size: 11px; color: var(--muted); margin-top: 6px; padding: 0 2px; }
 .alias-hint.error { color: var(--danger, #ef4444); }
 .alias-hint.success { color: var(--success, #22c55e); }
+
+/* ---------- Mobile action sheet ---------- */
+.action-sheet { position: fixed; inset: 0; z-index: 400; display: flex; flex-direction: column; justify-content: flex-end; }
+.action-sheet[hidden] { display: none; }
+.action-sheet-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.5); animation: fade-in 160ms ease; }
+.action-sheet-card {
+  position: relative;
+  background: var(--panel, #15182b);
+  border-top: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  padding: 8px 14px max(20px, env(safe-area-inset-bottom));
+  animation: slide-up 220ms cubic-bezier(.2,.9,.3,1);
+  box-shadow: 0 -20px 50px rgba(0,0,0,.5);
+}
+.action-sheet-handle {
+  width: 40px; height: 4px; background: rgba(255,255,255,.18);
+  border-radius: 4px; margin: 8px auto 14px;
+}
+.action-item {
+  display: flex; align-items: center; gap: 14px; width: 100%;
+  padding: 14px 12px; background: transparent;
+  border: none; border-radius: 14px;
+  color: var(--text); cursor: pointer; text-align: left;
+  font-family: inherit; font-size: 15px;
+  transition: background 120ms ease;
+}
+.action-item:hover, .action-item:active, .action-item:focus-visible {
+  background: rgba(99,102,241,.1); outline: none;
+}
+.action-item .action-icon { font-size: 28px; width: 44px; text-align: center; flex-shrink: 0; }
+.action-item .action-label { display: flex; flex-direction: column; gap: 2px; }
+.action-item .action-label strong { font-size: 15px; }
+.action-item .action-label small { font-size: 12px; color: var(--muted); }
+.action-item#asCancel {
+  margin-top: 6px; justify-content: center; font-weight: 600;
+  color: var(--muted); border: 1px solid var(--border);
+}
+@keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* The action sheet is mobile-only — desktop has the toolbar buttons already. */
+@media (min-width: 821px) { .action-sheet { display: none !important; } }
 .empty:hover, .empty:focus-visible { background: rgba(99,102,241,.04); outline: none; }
 .empty:focus-visible { box-shadow: 0 0 0 2px var(--primary) inset; }
 .empty:active .empty-ico { transform: scale(.96); }

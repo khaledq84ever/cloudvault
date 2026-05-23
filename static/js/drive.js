@@ -730,9 +730,17 @@ function pickPhoto() {
   const cam = $('#cameraInput');
   if (cam) cam.click(); else pickFiles();
 }
+function openActionSheet() {
+  const s = document.getElementById('actionSheet');
+  if (!s) { pickFiles(); return; }
+  s.hidden = false;
+}
+function closeActionSheet() {
+  const s = document.getElementById('actionSheet');
+  if (s) s.hidden = true;
+}
 $('#btnUpload').onclick = pickFiles;
-$('#bnUpload').onclick = pickFiles;
-$('#emptyState') && ($('#emptyState').onclick = pickFiles);
+$('#bnUpload').onclick = openActionSheet;
 const _emptyBtn = document.getElementById('empty');
 if (_emptyBtn) _emptyBtn.onclick = pickFiles;
 const _camBtn = document.getElementById('btnCamera');
@@ -740,6 +748,23 @@ if (_camBtn) _camBtn.onclick = pickPhoto;
 $('#fileInput').onchange = (e) => uploadFiles(e.target.files);
 const _camInput = document.getElementById('cameraInput');
 if (_camInput) _camInput.onchange = (e) => uploadFiles(e.target.files);
+// Action sheet wiring
+const _asBackdrop = document.getElementById('actionSheetBackdrop');
+if (_asBackdrop) _asBackdrop.onclick = closeActionSheet;
+const _asCancel = document.getElementById('asCancel');
+if (_asCancel) _asCancel.onclick = closeActionSheet;
+const _asUpload = document.getElementById('asUpload');
+if (_asUpload) _asUpload.onclick = () => { closeActionSheet(); pickFiles(); };
+const _asCamera = document.getElementById('asCamera');
+if (_asCamera) _asCamera.onclick = () => { closeActionSheet(); pickPhoto(); };
+const _asNewFolder = document.getElementById('asNewFolder');
+if (_asNewFolder) _asNewFolder.onclick = () => { closeActionSheet(); newFolder(); };
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const sheet = document.getElementById('actionSheet');
+    if (sheet && !sheet.hidden) closeActionSheet();
+  }
+});
 
 async function uploadFiles(files, folderId=null) {
   if (!files.length) return;
