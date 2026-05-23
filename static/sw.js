@@ -1,5 +1,5 @@
 /* CloudVault service worker — app-shell cache + offline fallback + smart runtime caching */
-const VERSION = 'cv-sw-v14';
+const VERSION = 'cv-sw-v15';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
@@ -33,7 +33,14 @@ self.addEventListener('activate', (event) => {
       Promise.all(
         keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k))
       )
-    ).then(() => self.clients.claim())
+    ).then(() => self.clients.claim()).then(async () => {
+      // Force-reload any controlled tabs so they pick up the fresh shell
+      // instead of waiting until the user closes/reopens them.
+      const clients = await self.clients.matchAll({ type: 'window' });
+      for (const c of clients) {
+        try { c.navigate(c.url); } catch (_) {}
+      }
+    })
   );
 });
 

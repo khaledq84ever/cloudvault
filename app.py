@@ -1471,6 +1471,41 @@ def secure_headers(resp: Response) -> Response:
             resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
         else:
             resp.headers.setdefault("Cache-Control", "public, max-age=3600")
+    elif "text/html" in (resp.headers.get("Content-Type") or ""):
+        # HTML must never sit in a browser disk cache, otherwise a deploy
+        # leaves users on the old shell pointing at the previous cache-bust.
+        resp.headers["Cache-Control"] = "no-store, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+    return resp
+
+
+# ---------------- Cache nuker (lets stuck clients self-heal) ----------------
+@app.route("/reset-cache")
+def reset_cache() -> Response:
+    """One-shot page that tells the browser to drop SW + caches, then redirects.
+
+    Visit /reset-cache once if you ever see stale UI after a deploy.
+    """
+    html = (
+        '<!doctype html><meta charset=utf-8><title>Resetting…</title>'
+        '<style>body{font-family:system-ui;background:#0a0a0c;color:#f5f1ea;'
+        'display:grid;place-items:center;height:100vh;margin:0;text-align:center}</style>'
+        '<div><h1>Refreshing your CloudVault…</h1>'
+        '<p id=m>Clearing cached files.</p></div>'
+        '<script>(async()=>{'
+        'try{if("serviceWorker" in navigator){'
+        'const rs=await navigator.serviceWorker.getRegistrations();'
+        'for(const r of rs){await r.unregister();}}'
+        'if("caches" in window){const ks=await caches.keys();'
+        'for(const k of ks){await caches.delete(k);}}'
+        '}catch(e){}'
+        'document.getElementById("m").textContent="Done. Reloading…";'
+        'setTimeout(()=>location.replace("/"),700);'
+        '})();</script>'
+    )
+    resp = Response(html, mimetype="text/html")
+    resp.headers["Cache-Control"] = "no-store"
+    resp.headers["Clear-Site-Data"] = '"cache", "storage"'
     return resp
 
 
