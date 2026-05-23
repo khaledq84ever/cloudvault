@@ -1093,8 +1093,76 @@ def secure_headers(resp):
 
 
 # ---------------- Bootstrap ----------------
+def _migrate_sqlite_to_postgres():
+    """One-shot copy of the legacy SQLite DB into Postgres, when:
+      - the active SQLAlchemy URL is postgres, AND
+      - the destination is empty (no users), AND
+      - /app/data/instance/cloudvault.db exists.
+    Idempotent: once Postgres has any user row, this becomes a no-op.
+    """
+    url = str(db.engine.url)
+    if not url.startswith("postgresql"):
+        return
+    try:
+        existing_users = db.session.execute(db.text('SELECT COUNT(*) FROM "user"')).scalar()
+    except Exception:
+        return
+    if existing_users and existing_users > 0:
+        return
+    sqlite_path = INSTANCE_DIR / "cloudvault.db"
+    if not sqlite_path.exists():
+        app.logger.info("postgres migration: no legacy sqlite at %s, skipping", sqlite_path)
+        return
+    import sqlite3
+    src = sqlite3.connect(str(sqlite_path))
+    src.row_factory = sqlite3.Row
+    table_order = ["user", "folder", "file", "share", "tag", "file_tags", "upload_session"]
+    bool_cols = {
+        "file": ("starred", "has_thumb"),
+        "share": ("allow_download",),
+    }
+    copied = {}
+    try:
+        for tbl in table_order:
+            try:
+                rows = src.execute(f'SELECT * FROM "{tbl}"').fetchall()
+            except sqlite3.OperationalError:
+                continue
+            if not rows:
+                copied[tbl] = 0
+                continue
+            cols = rows[0].keys()
+            placeholders = ", ".join(f":{c}" for c in cols)
+            collist = ", ".join(f'"{c}"' for c in cols)
+            stmt = db.text(f'INSERT INTO "{tbl}" ({collist}) VALUES ({placeholders})')
+            coerce = bool_cols.get(tbl, ())
+            for r in rows:
+                payload = dict(r)
+                for bc in coerce:
+                    if bc in payload and payload[bc] is not None:
+                        payload[bc] = bool(payload[bc])
+                db.session.execute(stmt, payload)
+            copied[tbl] = len(rows)
+        for tbl in ["user", "folder", "file", "share", "tag", "upload_session"]:
+            try:
+                db.session.execute(db.text(
+                    f"SELECT setval(pg_get_serial_sequence('\"{tbl}\"','id'), "
+                    f"(SELECT COALESCE(MAX(id), 1) FROM \"{tbl}\"))"
+                ))
+            except Exception:
+                pass
+        db.session.commit()
+        app.logger.info("postgres migration: copied rows = %s", copied)
+    except Exception as e:
+        db.session.rollback()
+        app.logger.exception("postgres migration failed: %s", e)
+    finally:
+        src.close()
+
+
 with app.app_context():
     db.create_all()
+    _migrate_sqlite_to_postgres()
     # Lightweight migration: add missing columns on SQLite
     try:
         cols = [c["name"] for c in db.session.execute(db.text("PRAGMA table_info(file)")).mappings()]
