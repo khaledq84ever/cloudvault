@@ -1300,7 +1300,7 @@ $$('.side-link, .bn-link').forEach(el => {
   el.onclick = (e) => {
     e.preventDefault();
     state.view = el.dataset.view; state.folder = null; state.tagId = null;
-    state.search = ''; $('#search').value = '';
+    state.search = '';
     $$('.side-link, .bn-link').forEach(x => x.classList.remove('active'));
     $$(`[data-view="${state.view}"]`).forEach(x => x.classList.add('active'));
     closeDetails();
@@ -1352,20 +1352,6 @@ if (_scrollTopBtn) _scrollTopBtn.onclick = () => {
   // Honour OS-level reduce-motion — instant jump for those users.
   const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   window.scrollTo({ top: 0, behavior: prefersReduce ? 'auto' : 'smooth' });
-};
-
-let searchTimer = null;
-let lastSearchValue = '';
-$('#search').oninput = (e) => {
-  clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => {
-    const v = e.target.value.trim();
-    // Don't refire when the user just navigated around the same query.
-    if (v === lastSearchValue) return;
-    lastSearchValue = v;
-    state.search = v;
-    loadList();
-  }, 150);
 };
 
 // ---------- Keyboard ----------
