@@ -47,14 +47,14 @@ async function load() {
   const stats = document.getElementById('sharesStats');
   const totalDl = items.reduce((a,b)=>a+(b.downloads||0),0);
   stats.innerHTML = `<span class="stat-num">${items.length}</span> active link${items.length===1?'':'s'} · <span class="stat-num">${totalDl}</span> total download${totalDl===1?'':'s'}`;
-  if (!items.length) { list.innerHTML = '<div class="empty-shares"><div class="ico-lg"><svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg></div><h3>No shared links yet</h3><p class="muted">Upload a file from /drive and we will generate a public link automatically.</p><a href="/drive" class="btn btn-primary">Go to my drive</a></div>'; return; }
+  if (!items.length) { list.innerHTML = '<div class="empty-shares"><div class="ico-lg"><svg class="ico" aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg></div><h3>No shared links yet</h3><p class="muted">Upload a file from /drive and we will generate a public link automatically.</p><a href="/drive" class="btn btn-primary">Go to my drive</a></div>'; return; }
   list.innerHTML = items.map((s, i) => {
     const dleft = daysLeft(s.expires_at);
     const expClass = dleft !== null && dleft <= 1 ? 'expiring' : '';
     return `
     <div class="share-card" data-token="${s.token}">
       <div class="share-card-head">
-        <div class="share-card-ico"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div class="share-card-ico"><svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
         <div class="share-card-info">
           <div class="share-card-name">${esc(s.file.name)}</div>
           <div class="share-card-meta">${fmtSize(s.file.size)} · uploaded ${fmtDate(s.created_at)} · <strong>${s.downloads}</strong> download${s.downloads===1?'':'s'}</div>
@@ -73,7 +73,7 @@ async function load() {
       </div>
       <div class="share-card-actions">
         <a class="btn btn-ghost" href="${esc(s.url)}" target="_blank" rel="noopener">Open preview ↗</a>
-        <a class="btn btn-ghost" href="${esc(s.download_url)}"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download now</a>
+        <a class="btn btn-ghost" href="${esc(s.download_url)}"><svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download now</a>
         <button class="btn btn-ghost danger" data-revoke="${s.token}">Revoke link</button>
       </div>
     </div>
@@ -86,7 +86,7 @@ document.addEventListener('click', async (e) => {
     const url = copyBtn.dataset.copy;
     try {
       await navigator.clipboard.writeText(url);
-      copyBtn.innerHTML = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied';
+      copyBtn.innerHTML = '<svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copied';
       setTimeout(() => copyBtn.textContent = 'Copy', 1500);
       toast('Link copied', 'success');
     } catch { toast('Failed to copy', 'error'); }

@@ -76,6 +76,7 @@ app.config["TRASH_RETENTION_DAYS"] = 30
 app.config["FREE_QUOTA_BYTES"] = PLANS["free"]["quota"]
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = True
 
 db.init_app(app)
 
@@ -402,7 +403,12 @@ def api_rename_folder(folder_id: int) -> Response:
     if "name" in data:
         folder.name = data["name"].strip()[:255]
     if "parent_id" in data:
-        folder.parent_id = data["parent_id"]
+        new_parent = data["parent_id"]
+        if new_parent is not None:
+            new_parent = int(new_parent)
+            if new_parent == folder.id or _folder_is_descendant_of_id(folder.id, new_parent, current_user.id):
+                return jsonify({"error": "Cannot move a folder into itself or a subfolder"}), 422
+        folder.parent_id = new_parent
     db.session.commit()
     emit(current_user.id, "folder_updated", folder_to_dict(folder))
     return jsonify(folder_to_dict(folder))
@@ -1011,6 +1017,7 @@ def public_share(token: str) -> Response | str:
             if check_password_hash(share.password_hash, pw):
                 session[unlocked_key] = True
             else:
+                time.sleep(1)  # Slow down brute-force attempts
                 return render_template("share_password.html", token=token, error="Wrong password"), 401
         if not session.get(unlocked_key):
             return render_template("share_password.html", token=token, error=None)

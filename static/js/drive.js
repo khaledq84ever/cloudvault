@@ -281,10 +281,10 @@ function render() {
 
 function thumbImg(item, cls) {
   if (item._type !== 'file' || !item.has_thumb) return '';
-  const icon = ICONS[classify(item.name, item.mime)] || ICONS.file;
+  const icon = ICONS[classify(item.name, item.mime)] || ICONS.generic;
   return `<img class="${cls}" loading="lazy" decoding="async"
     src="/api/files/${item.id}/thumb" alt=""
-    data-fallback-icon="${escapeHtml(icon)}" data-fallback-cls="${cls}-fallback">`;
+    data-fallback-icon="${icon.replace(/"/g, '&quot;')}" data-fallback-cls="${cls}-fallback">`;
 }
 
 // One delegated handler swaps broken thumbnails for their text icon fallback.
@@ -294,7 +294,7 @@ document.addEventListener('error', (e) => {
   if (!img.dataset.fallbackIcon) return;
   const span = document.createElement('span');
   span.className = img.dataset.fallbackCls || 'thumb-fallback';
-  span.textContent = img.dataset.fallbackIcon;
+  span.innerHTML = img.dataset.fallbackIcon;
   img.replaceWith(span);
 }, true);
 
@@ -305,7 +305,7 @@ function buildGridCard(item) {
   card.dataset.id = item.id; card.dataset.type = item._type;
   const key = `${item._type}:${item.id}`;
   if (state.selected.has(key)) card.classList.add('selected');
-  const ico = item._type === 'folder' ? ICONS.folder : ICONS[classify(item.name, item.mime)];
+  const ico = item._type === 'folder' ? ICONS.folder : (ICONS[classify(item.name, item.mime)] || ICONS.generic);
   const meta = item._type === 'folder' ? 'Folder' : fmtSize(item.size);
   const star = item.starred ? '<span class="star-flag">'+S('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>')+'</span>' : '';
   const trashDays = item.trashed_at ? `<span class="days-left">${30 - daysSince(item.trashed_at)} d</span>` : '';
@@ -334,7 +334,7 @@ function buildListRow(item) {
   row.dataset.id = item.id; row.dataset.type = item._type;
   const key = `${item._type}:${item.id}`;
   if (state.selected.has(key)) row.classList.add('selected');
-  const ico = item._type === 'folder' ? ICONS.folder : ICONS[classify(item.name, item.mime)];
+  const ico = item._type === 'folder' ? ICONS.folder : (ICONS[classify(item.name, item.mime)] || ICONS.generic);
   const meta = item._type === 'folder' ? '—' : fmtSize(item.size);
   const star = item.starred ? '<span class="star-mini">'+S('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>')+'</span>' : '';
   const trashDays = item.trashed_at ? `<span class="days-left-row">${30 - daysSince(item.trashed_at)} d left</span>` : '';
@@ -393,13 +393,14 @@ function wireItem(el, item) {
   // Long-press for mobile multi-select
   let pressTimer = null;
   el.addEventListener('touchstart', (e) => {
+    e.preventDefault();
     pressTimer = setTimeout(() => {
       state.selected.add(key); el.classList.add('selected');
       const c = el.querySelector('.card-check'); if (c) c.checked = true;
       updateActionBar();
       if (navigator.vibrate) navigator.vibrate(30);
     }, 500);
-  }, {passive: true});
+  }, {passive: false});
   el.addEventListener('touchend', () => { clearTimeout(pressTimer); pressTimer = null; });
   el.addEventListener('touchmove', () => { clearTimeout(pressTimer); pressTimer = null; });
 
@@ -636,7 +637,7 @@ function openDetails(item) {
   document.body.classList.add('with-details');
   const iconNode = (item._type === 'file' && item.has_thumb)
     ? `<div class="dp-thumb">${thumbImg(item, 'dp-thumb-img')}</div>`
-    : `<div class="dp-ico">${item._type === 'folder' ? ICONS.folder : ICONS[classify(item.name, item.mime)]}</div>`;
+    : `<div class="dp-ico">${item._type === 'folder' ? ICONS.folder : (ICONS[classify(item.name, item.mime)] || ICONS.generic)}</div>`;
   $('#dpThumbWrap').innerHTML = iconNode;
   $('#dpName').textContent = item.name;
   $('#dpMeta').textContent = item._type === 'folder' ? 'Folder' : (item.mime || 'File');
@@ -1376,7 +1377,8 @@ document.addEventListener('keydown', (e) => {
     });
     render(); updateActionBar();
   } else if (e.key === 'Delete' && state.selected.size) {
-    $('#actionBar [data-bulk="trash"]').click();
+    const trashBtn = $('#actionBar [data-bulk="delete"]');
+    if (trashBtn) trashBtn.click();
   } else if (e.key === 'Escape') {
     state.selected.clear();
     closeDetails(); closeCtx();

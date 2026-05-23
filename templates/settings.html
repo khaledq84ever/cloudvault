@@ -32,7 +32,7 @@
     <p class="muted">Update your profile information</p>
     <label>Email</label>
     <input type="email" value="{{ user.email }}" disabled>
-    <label>Display name</label>
+    <label for="nameInput">Display name</label>
     <input type="text" id="nameInput" value="{{ user.name }}">
     <div class="row">
       <button class="btn btn-primary" id="saveName">Save changes</button>
@@ -49,9 +49,9 @@
   <div class="settings-card">
     <h2>Change password</h2>
     <p class="muted">Use 6+ characters</p>
-    <label>Current password</label>
+    <label for="curPw">Current password</label>
     <input type="password" id="curPw">
-    <label>New password</label>
+    <label for="newPw">New password</label>
     <input type="password" id="newPw">
     <div class="row">
       <button class="btn btn-primary" id="savePw">Update password</button>
