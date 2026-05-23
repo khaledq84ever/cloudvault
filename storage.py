@@ -16,9 +16,9 @@ class LocalStorage:
         self.root.mkdir(exist_ok=True, parents=True)
 
     def _path(self, user_id, key):
-        d = self.root / str(user_id)
-        d.mkdir(exist_ok=True, parents=True)
-        return d / key
+        final = self.root / str(user_id) / key
+        final.parent.mkdir(exist_ok=True, parents=True)
+        return final
 
     def put(self, user_id, key, data: bytes):
         with open(self._path(user_id, key), "wb") as f:
