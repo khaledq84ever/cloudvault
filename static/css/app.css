@@ -106,11 +106,27 @@ body {
   /* No horizontal scroll on any page, ever. */
   overflow-x: hidden;
 }
-h1, h2, h3, h4 { font-family: 'Inter', sans-serif; letter-spacing: -.022em; font-weight: 600; color: var(--text); line-height: 1.15; }
+h1, h2, h3, h4 { font-family: 'Inter', sans-serif; letter-spacing: -.022em; font-weight: 600; color: var(--text); line-height: 1.15; margin-bottom: .35em; }
 h1 { font-weight: 700; line-height: 1.05; }
-p { max-width: 65ch; }
+h2 { font-weight: 700; }
+h3 { font-weight: 600; }
+h4 { font-weight: 600; }
+p { max-width: 65ch; margin-bottom: 1em; }
+p:last-child { margin-bottom: 0; }
 /* Editorial accent for the few headings that opt-in via .display */
 .display { font-family: 'Instrument Serif', serif; font-style: italic; letter-spacing: -.01em; font-weight: 400; line-height: 1.1; }
+
+/* ---------- SVG icon base ---------- */
+.ico { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ico svg { display: block; width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s var(--ease), opacity .15s var(--ease); }
+.ico-muted { color: var(--muted); }
+.ico-primary { color: var(--primary); }
+.ico-danger { color: var(--danger); }
+.ico-success { color: var(--success); }
+.ico-lg { width: 1.5em; height: 1.5em; }
+.ico-xl { width: 2em; height: 2em; }
+.ico-2xl { width: 3em; height: 3em; }
+
 a { color: var(--primary); text-decoration: none; transition: color .15s var(--ease); }
 
 /* iOS Safari: blue tap highlight on every interactive element is ugly
@@ -548,7 +564,8 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
   background: rgba(201,138,62,.1); outline: none;
 }
 .action-item .action-icon { font-size: 28px; width: 44px; text-align: center; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--text-2); }
-.action-item .action-icon svg { display: block; }
+.action-item .action-icon svg { display: block; transition: transform .15s var(--ease); }
+.action-item:hover .action-icon svg { transform: scale(1.12); }
 .action-divider { height: 1px; background: var(--border-soft); margin: 8px 8px; }
 .action-item-danger { color: var(--danger); }
 .action-item-danger .action-icon { color: var(--danger); }
@@ -613,7 +630,10 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 
 /* ---------- Context menu ---------- */
 .ctx-menu { position: fixed; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 6px; min-width: 220px; box-shadow: var(--shadow-lg); z-index: 100; }
-.ctx-menu button { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 9px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-2); transition: background .12s var(--ease), color .12s var(--ease); }
+.ctx-menu button { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 9px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-2); transition: background .12s var(--ease), color .12s var(--ease), transform .12s var(--ease); }
+.ctx-menu button:hover { background: rgba(255,255,255,.04); color: var(--text); }
+.ctx-menu button:hover .ico svg { transform: scale(1.12); }
+.ctx-menu button:active { transform: scale(.98); }
 .ctx-menu button:hover { background: var(--panel-2); color: var(--text); }
 .ctx-menu button.danger { color: var(--danger); }
 .ctx-menu button.danger:hover { background: rgba(216,103,90,.1); color: var(--danger); }
@@ -821,9 +841,11 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 .toolbar-right { display: flex; gap: 6px; align-items: center; }
 .select { background: var(--panel); border: 1px solid var(--border); color: var(--text); padding: 8px 12px; border-radius: 10px; font-size: 13px; font-family: inherit; cursor: pointer; }
 .select:focus { outline: none; border-color: var(--primary); }
-.icon-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 16px; }
-.icon-btn:hover { color: var(--text); border-color: var(--primary); }
+.icon-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 16px; transition: transform .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease), background .15s var(--ease); }
+.icon-btn:hover { color: var(--text); border-color: var(--primary); transform: scale(1.08); }
+.icon-btn:active { transform: scale(.94); }
 .icon-btn.active { background: var(--panel-2); color: var(--primary); border-color: var(--primary); }
+.icon-btn.active:hover { transform: scale(1.06); }
 
 /* ---------- Action bar (bulk) ---------- */
 .action-bar {
@@ -901,6 +923,7 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 .dp-meta { color: var(--muted); font-size: 12px; text-align: center; margin: 4px 0 20px; }
 .dp-actions { display: flex; flex-direction: column; gap: 6px; margin-bottom: 22px; }
 .dp-actions .btn { justify-content: flex-start; padding: 9px 14px; font-size: 13px; }
+.dp-actions .btn:hover .ico svg { transform: scale(1.12); }
 .dp-actions .danger { color: var(--danger); }
 .dp-info { border-top: 1px solid var(--border); padding-top: 16px; }
 .info-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 13px; }
@@ -1475,7 +1498,8 @@ body.with-details .main { padding-right: 340px; }
   transition: color .15s var(--ease), background .15s var(--ease);
   text-decoration: none;
 }
-.appnav-link svg { opacity: .85; }
+.appnav-link svg { opacity: .85; transition: transform .15s var(--ease), opacity .15s var(--ease); }
+.appnav-link:hover svg { transform: scale(1.1); opacity: 1; }
 .appnav-link:hover { color: var(--text); background: rgba(255,255,255,.04); }
 .appnav-link.active {
   color: var(--text);

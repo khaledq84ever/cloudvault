@@ -11,10 +11,20 @@ const state = {
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
 
+const S = (p) => `<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 const ICONS = {
-  folder: '📁', image: '🖼', video: '🎬', audio: '🎵', pdf: '📕',
-  doc: '📄', sheet: '📊', slide: '📽', archive: '🗜',
-  code: '📝', exec: '⚙', generic: '📄'
+  folder: S('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>'),
+  image: S('<rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>'),
+  video: S('<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 9l5 3-5 3z"/>'),
+  audio: S('<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'),
+  pdf: S('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><polyline points="10 9 9 9 8 9"/>'),
+  doc: S('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>'),
+  sheet: S('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/><line x1="8" y1="21" x2="16" y2="21"/>'),
+  slide: S('<rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>'),
+  archive: S('<path d="M21 8v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M3 8V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v3"/><line x1="10" y1="12" x2="14" y2="12"/><line x1="12" y1="10" x2="12" y2="14"/>'),
+  code: S('<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'),
+  exec: S('<polyline points="5 3 19 12 5 21 5 3"/>'),
+  generic: S('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'),
 };
 function classify(name, mime) {
   if (mime?.startsWith('image/')) return 'image';
@@ -118,7 +128,7 @@ async function loadMe() {
   const up = $('#ucUpgrade');
   if (up) up.style.display = me.plan === 'business' ? 'none' : '';
   if (pct > 90 && !sessionStorage.getItem('quotaWarned')) {
-    toast(`⚠️ Storage ${pct.toFixed(0)}% full — upgrade for more`, 'error');
+    toast(`Storage ${pct.toFixed(0)}% full — upgrade for more`, 'error');
     sessionStorage.setItem('quotaWarned', '1');
   }
 }
@@ -297,7 +307,7 @@ function buildGridCard(item) {
   if (state.selected.has(key)) card.classList.add('selected');
   const ico = item._type === 'folder' ? ICONS.folder : ICONS[classify(item.name, item.mime)];
   const meta = item._type === 'folder' ? 'Folder' : fmtSize(item.size);
-  const star = item.starred ? '<span class="star-flag">⭐</span>' : '';
+  const star = item.starred ? '<span class="star-flag">'+S('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>')+'</span>' : '';
   const trashDays = item.trashed_at ? `<span class="days-left">${30 - daysSince(item.trashed_at)} d</span>` : '';
   const thumb = (item._type === 'file' && item.has_thumb)
     ? `<div class="card-thumb">${thumbImg(item, 'card-thumb-img')}</div>`
@@ -326,7 +336,7 @@ function buildListRow(item) {
   if (state.selected.has(key)) row.classList.add('selected');
   const ico = item._type === 'folder' ? ICONS.folder : ICONS[classify(item.name, item.mime)];
   const meta = item._type === 'folder' ? '—' : fmtSize(item.size);
-  const star = item.starred ? '<span class="star-mini">⭐</span>' : '';
+  const star = item.starred ? '<span class="star-mini">'+S('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>')+'</span>' : '';
   const trashDays = item.trashed_at ? `<span class="days-left-row">${30 - daysSince(item.trashed_at)} d left</span>` : '';
   const tagDots = (item.tags || []).slice(0, 3).map(t =>
     `<span class="tag-chip-mini" style="background:${t.color}" title="${escapeHtml(t.name)}"></span>`
@@ -717,8 +727,9 @@ async function openMoveDialog(mode='move') {
   if (ctaEl) ctaEl.textContent = mode === 'copy' ? 'Copy here' : 'Move here';
   const tree = await api('/api/folders/tree');
   const wrap = $('#folderTree');
-  wrap.innerHTML = `<div class="tree-node" data-id=""><span>📁 My Drive (root)</span></div>` +
-    tree.map(f => `<div class="tree-node" data-id="${f.id}"><span>📁 ${escapeHtml(f.path)}</span></div>`).join('');
+    const folderIco = S('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>');
+  wrap.innerHTML = `<div class="tree-node" data-id=""><span>${folderIco} My Drive (root)</span></div>` +
+    tree.map(f => `<div class="tree-node" data-id="${f.id}"><span>${folderIco} ${escapeHtml(f.path)}</span></div>`).join('');
   state.moveTarget = null;
   ctaEl.disabled = true;
   $$('#folderTree .tree-node').forEach(n => n.onclick = () => {
@@ -882,7 +893,7 @@ function renderPreview() {
   else if (file.mime?.startsWith('text/') || /\.(txt|md|json|js|ts|py|html|css|csv)$/i.test(file.name)) {
     fetch(url).then(r => r.text()).then(t => body.innerHTML = `<pre>${escapeHtml(t.slice(0, 50000))}</pre>`);
   } else {
-    body.innerHTML = `<div style="color:white;text-align:center;padding:40px;">Preview not available.<br><br><a href="/api/files/${file.id}/download" class="btn btn-primary">⬇ Download</a></div>`;
+      body.innerHTML = `<div style="color:white;text-align:center;padding:40px;">Preview not available.<br><br><a href="/api/files/${file.id}/download" class="btn btn-primary">`+S('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>')+` Download</a></div>`;
   }
   $('#previewFoot').textContent = `${file.name} · ${fmtSize(file.size)} (${previewIndex+1}/${previewable.length})`;
   $('#prevBtn').style.display = previewable.length > 1 ? 'flex' : 'none';
@@ -964,7 +975,7 @@ async function uploadFiles(files, folderId=null) {
     }
     const projected = (state.me.used + total) / state.me.quota * 100;
     if (projected >= 90 && projected < 100) {
-      toast(`⚠ Storage will be ${projected.toFixed(0)}% full after this upload.`, '');
+      toast(`Storage will be ${projected.toFixed(0)}% full after this upload.`, 'warn');
     }
   }
   const target = folderId !== null ? folderId : state.folder;

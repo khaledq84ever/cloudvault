@@ -29,14 +29,14 @@
 <div class="share-folder-wrap">
   <div class="share-folder-head">
     <div class="share-folder-title">
-      <span class="share-folder-icon">📁</span>
+      <span class="share-folder-icon"><svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
       <div>
         <h1>{{ root.name }}</h1>
         <p class="muted">Shared folder · {{ files|length }} file{{ '' if files|length == 1 else 's' }}{% if subfolders %} · {{ subfolders|length }} subfolder{{ '' if subfolders|length == 1 else 's' }}{% endif %}</p>
       </div>
     </div>
     {% if share.allow_download %}
-      <a href="{{ url_for('public_folder_zip', token=share.token) }}" class="btn btn-primary">⬇ Download all (zip)</a>
+      <a href="{{ url_for('public_folder_zip', token=share.token) }}" class="btn btn-primary"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download all (zip)</a>
     {% endif %}
   </div>
 
@@ -53,7 +53,7 @@
 
   {% if not files and not subfolders %}
     <div class="share-folder-empty">
-      <div class="empty-ico">📂</div>
+      <div class="empty-ico"><svg aria-hidden="true" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg></div>
       <p>This folder is empty.</p>
     </div>
   {% else %}
@@ -61,7 +61,7 @@
       {% for sf in subfolders %}
         <li class="sf-row">
           <a class="sf-name" href="{{ url_for('public_share', token=share.token) }}?path={{ sf.id }}">
-            <span class="sf-ico">📁</span>
+            <span class="sf-ico"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
             <span class="sf-label">{{ sf.name }}</span>
           </a>
           <span class="sf-meta">Folder</span>
@@ -71,18 +71,18 @@
         <li class="sf-row">
           {% if f.mime and (f.mime.startswith('image/') or f.mime.startswith('video/') or 'pdf' in f.mime) %}
             <a class="sf-name" href="{{ url_for('public_folder_file_preview', token=share.token, file_id=f.id) }}" target="_blank" rel="noopener">
-              <span class="sf-ico">{% if f.mime.startswith('image/') %}🖼{% elif f.mime.startswith('video/') %}🎬{% else %}📄{% endif %}</span>
+              <span class="sf-ico">{% if f.mime.startswith('image/') %}<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>{% elif f.mime.startswith('video/') %}<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 9l5 3-5 3z"/></svg>{% else %}<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>{% endif %}</span>
               <span class="sf-label">{{ f.name }}</span>
             </a>
           {% else %}
             <span class="sf-name">
-              <span class="sf-ico">📄</span>
+              <span class="sf-ico"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
               <span class="sf-label">{{ f.name }}</span>
             </span>
           {% endif %}
           <span class="sf-meta">{{ '%.2f'|format(f.size/1024/1024) }} MB</span>
           {% if share.allow_download %}
-            <a class="sf-dl" href="{{ url_for('public_folder_file_download', token=share.token, file_id=f.id) }}" title="Download">⬇</a>
+            <a class="sf-dl" href="{{ url_for('public_folder_file_download', token=share.token, file_id=f.id) }}" title="Download"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
           {% endif %}
         </li>
       {% endfor %}

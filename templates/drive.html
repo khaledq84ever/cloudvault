@@ -72,7 +72,7 @@
     <div class="bar"><div class="bar-fill" id="barFill"></div></div>
     <div class="uc-storage" id="storageText">— / —</div>
     <div class="uc-actions">
-      <a href="{{ url_for('logout') }}" title="Sign out">⏻ Sign out</a>
+      <a href="{{ url_for('logout') }}" title="Sign out"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</a>
     </div>
   </div>
 </aside>
@@ -125,8 +125,8 @@
         <option value="size|desc">Largest first</option>
         <option value="size|asc">Smallest first</option>
       </select>
-      <button class="icon-btn" id="viewGrid" title="Grid view">▦</button>
-      <button class="icon-btn active" id="viewList" title="List view">☰</button>
+      <button class="icon-btn" id="viewGrid" title="Grid view"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
+      <button class="icon-btn active" id="viewList" title="List view"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
     </div>
   </div>
 
@@ -186,29 +186,29 @@
     </div>
     <div id="grid" class="grid view-list"></div>
     <button class="empty" id="empty" type="button" hidden>
-      <div class="empty-ico">📂</div>
+      <div class="empty-ico"><svg aria-hidden="true" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg></div>
       <h3>Nothing here yet</h3>
       <p>Tap here to upload your first file, or drop files anywhere on this page.</p>
     </button>
     <div class="drop-overlay" id="dropOverlay">
-      <div class="drop-msg">⬇ Drop to upload</div>
+      <div class="drop-msg"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M5 11l7-7 7 7"/><path d="M5 20h14"/></svg> Drop to upload</div>
     </div>
   </div>
 </main>
 
 <!-- Details panel -->
 <aside class="details-panel" id="detailsPanel" hidden>
-  <button class="dp-close" id="dpClose">✕</button>
-  <div id="dpThumbWrap"><div class="dp-ico">📄</div></div>
+  <button class="dp-close" id="dpClose"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <div id="dpThumbWrap"><div class="dp-ico"><svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div></div>
   <h3 id="dpName">—</h3>
   <div class="dp-meta" id="dpMeta">—</div>
   <div class="dp-actions">
-    <button class="btn btn-ghost btn-block" id="dpPreview">👁 Preview</button>
-    <button class="btn btn-ghost btn-block" id="dpDownload">⬇ Download</button>
-    <button class="btn btn-ghost btn-block" id="dpShare">🔗 Share</button>
-    <button class="btn btn-ghost btn-block" id="dpRename">✏ Rename</button>
-    <button class="btn btn-ghost btn-block" id="dpMove">📂 Move to…</button>
-    <button class="btn btn-ghost btn-block danger" id="dpDelete">🗑 Trash</button>
+    <button class="btn btn-ghost btn-block" id="dpPreview"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Preview</button>
+    <button class="btn btn-ghost btn-block" id="dpDownload"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download</button>
+    <button class="btn btn-ghost btn-block" id="dpShare"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Share</button>
+    <button class="btn btn-ghost btn-block" id="dpRename"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Rename</button>
+    <button class="btn btn-ghost btn-block" id="dpMove"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg> Move to…</button>
+    <button class="btn btn-ghost btn-block danger" id="dpDelete"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Trash</button>
   </div>
   <div id="dpTags"></div>
   <div class="dp-public-link" id="dpPublicLink" hidden>
@@ -267,21 +267,21 @@
   <div class="action-sheet-card">
     <div class="action-sheet-handle" aria-hidden="true"></div>
     <button type="button" class="action-item" id="asUpload">
-      <span class="action-icon">⬆️</span>
+      <span class="action-icon"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
       <span class="action-label">
         <strong>Upload files</strong>
         <small>Pick photos, videos, or any file</small>
       </span>
     </button>
     <button type="button" class="action-item" id="asCamera">
-      <span class="action-icon">📷</span>
+      <span class="action-icon"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
       <span class="action-label">
         <strong>Take photo or video</strong>
         <small>Capture and upload from your camera</small>
       </span>
     </button>
     <button type="button" class="action-item" id="asNewFolder">
-      <span class="action-icon">📁</span>
+      <span class="action-icon"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg></span>
       <span class="action-label">
         <strong>New folder</strong>
         <small>Organise files into a folder</small>
@@ -392,9 +392,9 @@
 
 <!-- Preview modal -->
 <div class="modal preview-modal" id="previewModal" hidden>
-  <button class="preview-close" id="previewClose">✕</button>
-  <button class="preview-nav prev" id="prevBtn">‹</button>
-  <button class="preview-nav next" id="nextBtn">›</button>
+  <button class="preview-close" id="previewClose"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <button class="preview-nav prev" id="prevBtn"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+  <button class="preview-nav next" id="nextBtn"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
   <div class="preview-body" id="previewBody"></div>
   <div class="preview-foot" id="previewFoot"></div>
 </div>
@@ -410,7 +410,7 @@
   <div class="pub-head">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
     <span class="pub-title" id="pubTitle">Uploaded</span>
-    <button class="pub-close" onclick="document.getElementById('postUploadBanner').hidden = true">✕</button>
+    <button class="pub-close" onclick="document.getElementById('postUploadBanner').hidden = true" aria-label="Close"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div class="pub-row">
     <span class="pub-label">Share link</span>
