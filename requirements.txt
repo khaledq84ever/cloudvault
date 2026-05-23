@@ -12,3 +12,4 @@ psycopg2-binary==2.9.10
 flask-sock==0.7.0
 simple-websocket==1.1.0
 qrcode==8.1
+resend==2.4.0

@@ -51,13 +51,20 @@ async function load() {
   list.innerHTML = items.map((s, i) => {
     const dleft = daysLeft(s.expires_at);
     const expClass = dleft !== null && dleft <= 1 ? 'expiring' : '';
+    const isFolder = s.kind === 'folder';
+    const target = isFolder ? s.folder : s.file;
+    const name = target ? target.name : '(unknown)';
+    const sizeBit = !isFolder && s.file ? fmtSize(s.file.size) + ' · ' : 'Folder · ';
+    const ico = isFolder
+      ? '<svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+      : '<svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>';
     return `
     <div class="share-card" data-token="${s.token}">
       <div class="share-card-head">
-        <div class="share-card-ico"><svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
+        <div class="share-card-ico">${ico}</div>
         <div class="share-card-info">
-          <div class="share-card-name">${esc(s.file.name)}</div>
-          <div class="share-card-meta">${fmtSize(s.file.size)} · uploaded ${fmtDate(s.created_at)} · <strong>${s.downloads}</strong> download${s.downloads===1?'':'s'}</div>
+          <div class="share-card-name">${esc(name)}</div>
+          <div class="share-card-meta">${sizeBit}uploaded ${fmtDate(s.created_at)} · <strong>${s.downloads}</strong> download${s.downloads===1?'':'s'}</div>
         </div>
         <div class="share-card-expiry ${expClass}">${dleft === null ? 'No expiry' : dleft === 0 ? 'Expired' : `${dleft} day${dleft===1?'':'s'} left`}</div>
       </div>
