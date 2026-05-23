@@ -60,10 +60,9 @@ app.config["SQLALCHEMY_DATABASE_URI"] = db_url or "sqlite:///" + str(INSTANCE_DI
 app.config["MAX_CONTENT_LENGTH"] = 500 * 1024 * 1024
 app.config["TRASH_RETENTION_DAYS"] = 30
 
+# Single tier for everyone. No paid plans, no Stripe. 500 MB quota, 100 MB max file.
 PLANS = {
-    "free":     {"name": "Free",     "price": 0,      "quota": 15 * 1024**3,   "max_file": 500 * 1024**2},
-    "pro":      {"name": "Pro",      "price": 4.99,   "quota": 100 * 1024**3,  "max_file": 5  * 1024**3},
-    "business": {"name": "Business", "price": 14.99,  "quota": 1024 * 1024**3, "max_file": 20 * 1024**3},
+    "free": {"name": "Free", "price": 0, "quota": 500 * 1024**2, "max_file": 100 * 1024**2},
 }
 app.config["FREE_QUOTA_BYTES"] = PLANS["free"]["quota"]
 
@@ -1135,30 +1134,25 @@ def api_events():
     })
 
 
-# ---------------- Pricing + Billing ----------------
+# ---------------- Pricing + Billing (free-only mode) ----------------
+# Plans collapsed to a single 500 MB free tier — pricing/billing/upgrade
+# routes redirect home so stale UI links don't 404. Keeping the routes
+# means external bookmarks and the navbar still resolve.
 @app.route("/pricing")
 def pricing():
-    return render_template("pricing.html", plans=PLANS, user=current_user if current_user.is_authenticated else None)
+    return redirect(url_for("drive") if current_user.is_authenticated else url_for("index"))
 
 
 @app.route("/billing")
 @login_required
 def billing():
-    return render_template("billing.html", user=current_user, plans=PLANS, used=used_bytes(current_user.id))
+    return redirect(url_for("drive"))
 
 
 @app.route("/api/plan/upgrade", methods=["POST"])
 @login_required
 def api_plan_upgrade():
-    data = request.get_json() or {}
-    target = data.get("plan", "").lower()
-    if target not in PLANS:
-        return jsonify({"error": "Invalid plan"}), 400
-    # Mock checkout — in real impl this is the Stripe webhook handler
-    current_user.plan = target
-    current_user.plan_expires_at = datetime.utcnow() + timedelta(days=30) if target != "free" else None
-    db.session.commit()
-    return jsonify({"ok": True, "plan": target})
+    return jsonify({"error": "Plans are no longer offered — everyone is on the free 500 MB tier."}), 410
 
 
 # ---------------- Healthz ----------------
@@ -1266,6 +1260,24 @@ def _migrate_sqlite_to_postgres():
         src.close()
 
 
+def _demote_all_users_to_free():
+    """Plans collapsed to a single free tier (500 MB). Demote anyone still
+    flagged as pro/business so /api/me reports the actual free limits."""
+    try:
+        result = db.session.execute(db.text(
+            "UPDATE \"user\" SET plan='free', plan_expires_at=NULL "
+            "WHERE plan IS NULL OR plan != 'free'"
+        ))
+        if result.rowcount:
+            db.session.commit()
+            app.logger.info("plan collapse: demoted %d users to free", result.rowcount)
+        else:
+            db.session.rollback()
+    except Exception as e:
+        db.session.rollback()
+        app.logger.warning("plan demotion failed: %s", e)
+
+
 def _make_shares_permanent_once():
     """Convert pre-existing no-password auto-shares to permanent links.
     Auto-shares used to expire after 7 days; if you'd given someone a link,
@@ -1290,6 +1302,7 @@ with app.app_context():
     db.create_all()
     _migrate_sqlite_to_postgres()
     _make_shares_permanent_once()
+    _demote_all_users_to_free()
     # Lightweight migration: add missing columns on SQLite
     try:
         cols = [c["name"] for c in db.session.execute(db.text("PRAGMA table_info(file)")).mappings()]

@@ -26,13 +26,12 @@
   <div class="hero-cta">
     <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      Get 15 GB free
+      Get 500 MB free
     </a>
-    <a href="{{ url_for('pricing') }}" class="btn btn-ghost btn-lg">See pricing</a>
   </div>
 
   <div class="hero-stats">
-    <div class="hero-stat"><div class="num">15 GB</div><div class="lbl">Free forever</div></div>
+    <div class="hero-stat"><div class="num">500 MB</div><div class="lbl">Free forever</div></div>
     <div class="hero-stat"><div class="num">256‑bit</div><div class="lbl">AES encrypted</div></div>
     <div class="hero-stat"><div class="num">∞</div><div class="lbl">Devices</div></div>
     <div class="hero-stat"><div class="num">~60s</div><div class="lbl">To get started</div></div>
@@ -104,48 +103,27 @@
 </section>
 
 <section class="pricing">
-  <h2>Pricing as fair as it gets</h2>
-  <p class="sub">Start free, upgrade only if you need more. Cancel any time.</p>
-  <div class="plans">
-    <div class="plan">
-      <h3>Free</h3>
+  <h2>Free for everyone</h2>
+  <p class="sub">No paywalls, no plans, no credit card. Sign up and start storing.</p>
+  <div class="plans" style="justify-content:center">
+    <div class="plan featured" style="max-width:380px">
+      <span class="badge">Free forever</span>
+      <h3>CloudVault</h3>
       <div class="price">$0<span>/mo</span></div>
       <ul>
-        <li>15 GB storage</li>
-        <li>500 MB max file size</li>
+        <li>500 MB storage per account</li>
+        <li>100 MB max file size</li>
         <li>Unlimited devices</li>
-        <li>Share links + password</li>
+        <li>Permanent share links</li>
+        <li>Password‑protected sharing</li>
       </ul>
-      <a href="{{ url_for('register') }}" class="btn btn-outline btn-block">Start free</a>
-    </div>
-    <div class="plan featured">
-      <span class="badge">Most popular</span>
-      <h3>Pro</h3>
-      <div class="price">$4.99<span>/mo</span></div>
-      <ul>
-        <li>100 GB storage</li>
-        <li>5 GB max file size</li>
-        <li>View‑only sharing</li>
-        <li>Priority support</li>
-      </ul>
-      <a href="{{ url_for('register') }}" class="btn btn-primary btn-block">Go Pro</a>
-    </div>
-    <div class="plan">
-      <h3>Business</h3>
-      <div class="price">$14.99<span>/mo</span></div>
-      <ul>
-        <li>1 TB storage</li>
-        <li>20 GB max file size</li>
-        <li>Team workspace (soon)</li>
-        <li>24/7 support</li>
-      </ul>
-      <a href="{{ url_for('register') }}" class="btn btn-outline btn-block">Get Business</a>
+      <a href="{{ url_for('register') }}" class="btn btn-primary btn-block">Create account</a>
     </div>
   </div>
 </section>
 
 <footer class="foot">
-  <p>© 2026 CloudVault. Built for safekeeping. <a href="{{ url_for('pricing') }}" style="margin-left: 8px;">Pricing</a> · <a href="mailto:khaledq8tv@gmail.com">Contact</a></p>
+  <p>© 2026 CloudVault. Built for safekeeping. <a href="mailto:khaledq8tv@gmail.com">Contact</a></p>
 </footer>
 <script src="/static/js/appnav.js?v={{ cb }}" defer></script>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
