@@ -359,6 +359,42 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
   .btn-camera-label { display: none; }
   .btn-camera { padding-left: 12px; padding-right: 12px; }
 }
+
+/* ---------- Share modal: QR + alias ---------- */
+.share-qr-row {
+  display: flex; gap: 16px; align-items: center;
+  margin: 16px 0;
+  padding: 14px;
+  background: rgba(255,255,255,.02);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.share-qr {
+  width: 110px; height: 110px;
+  background: #fff;
+  padding: 6px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  image-rendering: pixelated;
+}
+.share-qr[src=""], .share-qr:not([src]) { background: transparent; }
+.share-qr-hint { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--muted); }
+.share-qr-hint strong { color: var(--text); font-size: 14px; }
+.alias-row { gap: 0; align-items: stretch; }
+.alias-prefix {
+  display: inline-flex; align-items: center;
+  padding: 0 10px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border); border-right: none;
+  border-radius: 10px 0 0 10px;
+  color: var(--muted); font-family: monospace; font-size: 13px;
+  user-select: none;
+}
+.alias-row input { border-radius: 0 !important; border-right: none !important; font-family: monospace; font-size: 14px; }
+.alias-row .btn { border-radius: 0 10px 10px 0; }
+.alias-hint { font-size: 11px; color: var(--muted); margin-top: 6px; padding: 0 2px; }
+.alias-hint.error { color: var(--danger, #ef4444); }
+.alias-hint.success { color: var(--success, #22c55e); }
 .empty:hover, .empty:focus-visible { background: rgba(99,102,241,.04); outline: none; }
 .empty:focus-visible { box-shadow: 0 0 0 2px var(--primary) inset; }
 .empty:active .empty-ico { transform: scale(.96); }

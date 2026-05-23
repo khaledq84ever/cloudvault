@@ -130,6 +130,7 @@ class File(db.Model):
 class Share(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(40), unique=True, nullable=False)
+    alias = db.Column(db.String(60), unique=True, nullable=True, index=True)
     file_id = db.Column(db.Integer, db.ForeignKey("file.id"), nullable=False)
     expires_at = db.Column(db.DateTime, nullable=True)
     password_hash = db.Column(db.String(255), nullable=True)
@@ -211,8 +212,10 @@ def _latest_share_for(file_id):
 
 def file_to_dict(f):
     share = _latest_share_for(f.id)
-    share_url = url_for("public_share", token=share.token, _external=True) if share else None
-    download_url = url_for("public_download", token=share.token, _external=True) if share else None
+    handle = (share.alias or share.token) if share else None
+    share_url = url_for("public_share", token=handle, _external=True) if share else None
+    download_url = url_for("public_download", token=handle, _external=True) if share else None
+    qr_url = url_for("public_share_qr", token=handle, _external=True) if share else None
     return {
         "id": f.id,
         "name": f.name,
@@ -226,7 +229,9 @@ def file_to_dict(f):
         "tags": [{"id": t.id, "name": t.name, "color": t.color} for t in f.tags],
         "share_url": share_url,
         "download_url": download_url,
+        "share_qr_url": qr_url,
         "share_token": share.token if share else None,
+        "share_alias": share.alias if share else None,
         "share_expires_at": share.expires_at.isoformat() if share and share.expires_at else None,
         "type": "file",
     }
@@ -1006,7 +1011,9 @@ def api_share(file_id):
     db.session.commit()
     return jsonify({
         "token": token,
+        "alias": None,
         "url": url_for("public_share", token=token, _external=True),
+        "qr_url": url_for("public_share_qr", token=token, _external=True),
         "expires_at": expires_at.isoformat() if expires_at else None,
         "has_password": bool(pw_hash),
         "allow_download": share.allow_download,
@@ -1051,18 +1058,27 @@ def _share_valid(share):
     return True
 
 
+def _resolve_share(handle):
+    """Look up a Share by either its random token or its custom alias."""
+    return (Share.query.filter_by(alias=handle).first()
+            or Share.query.filter_by(token=handle).first())
+
+
 @app.route("/s/<token>", methods=["GET", "POST"])
 def public_share(token):
-    share = Share.query.filter_by(token=token).first_or_404()
+    share = _resolve_share(token)
+    if not share:
+        abort(404)
     if not _share_valid(share):
         return render_template("share_expired.html"), 410
     f = File.query.get_or_404(share.file_id)
     if f.trashed_at:
         return render_template("share_expired.html"), 410
 
-    # Password gate (session-scoped)
+    # Password gate (session-scoped — keyed on the canonical token so an
+    # unlock survives whether the user came in via alias or token).
     if share.password_hash:
-        unlocked_key = f"share_ok_{token}"
+        unlocked_key = f"share_ok_{share.token}"
         if request.method == "POST":
             pw = request.form.get("password", "")
             if check_password_hash(share.password_hash, pw):
@@ -1078,25 +1094,92 @@ def public_share(token):
 @app.route("/s/<token>/download")
 @limiter.limit("200 per hour")
 def public_download(token):
-    share = Share.query.filter_by(token=token).first_or_404()
+    share = _resolve_share(token)
+    if not share: abort(404)
     if not _share_valid(share): abort(410)
     if not share.allow_download: abort(403)
     f = File.query.get_or_404(share.file_id)
     if f.trashed_at: abort(410)
-    if share.password_hash and not session.get(f"share_ok_{token}"):
+    if share.password_hash and not session.get(f"share_ok_{share.token}"):
         return redirect(url_for("public_share", token=token))
     share.downloads += 1
     db.session.commit()
     return _serve_file_data(f, attachment=True)
 
 
+@app.route("/s/<token>/qr.png")
+@app.route("/s/<token>/qr")
+def public_share_qr(token):
+    """Return a 220x220 PNG QR code that encodes the share URL.
+    Works for both /s/<token> and /s/<alias> incoming handles."""
+    share = _resolve_share(token)
+    if not share: abort(404)
+    if not _share_valid(share): abort(410)
+    try:
+        import qrcode
+        import qrcode.image.pil  # noqa: F401  (force PIL backend import)
+    except ImportError:
+        abort(501)
+    handle = share.alias or share.token
+    url = url_for("public_share", token=handle, _external=True)
+    img = qrcode.make(url, box_size=8, border=2)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+    resp = send_file(buf, mimetype="image/png")
+    resp.headers["Cache-Control"] = "public, max-age=3600"
+    return resp
+
+
+import re as _re
+_ALIAS_RE = _re.compile(r"^[a-z0-9][a-z0-9-]{2,58}[a-z0-9]$")
+
+
+@app.route("/api/share/<token>/alias", methods=["POST", "DELETE"])
+@login_required
+def api_share_set_alias(token):
+    """Owner sets/clears a pretty alias for one of their shares."""
+    share = Share.query.filter_by(token=token).first_or_404()
+    file = File.query.get_or_404(share.file_id)
+    if file.owner_id != current_user.id:
+        abort(403)
+
+    if request.method == "DELETE":
+        share.alias = None
+        db.session.commit()
+        return jsonify({"ok": True, "alias": None})
+
+    data = request.get_json() or {}
+    alias = (data.get("alias") or "").strip().lower()
+    if not alias:
+        return jsonify({"error": "Alias required", "code": "alias_required"}), 400
+    if not _ALIAS_RE.match(alias):
+        return jsonify({
+            "error": "Alias must be 4-60 chars, lowercase letters/digits/hyphens, "
+                     "must start and end with a letter or digit.",
+            "code": "alias_invalid",
+        }), 400
+    # Don't collide with existing tokens either (so /s/<alias> stays unambiguous).
+    clash = Share.query.filter(
+        (Share.alias == alias) | (Share.token == alias)
+    ).filter(Share.id != share.id).first()
+    if clash:
+        return jsonify({"error": "That alias is taken — try another.",
+                        "code": "alias_taken"}), 409
+    share.alias = alias
+    db.session.commit()
+    new_url = url_for("public_share", token=alias, _external=True)
+    return jsonify({"ok": True, "alias": alias, "url": new_url})
+
+
 @app.route("/s/<token>/preview")
 def public_preview(token):
-    share = Share.query.filter_by(token=token).first_or_404()
+    share = _resolve_share(token)
+    if not share: abort(404)
     if not _share_valid(share): abort(410)
     f = File.query.get_or_404(share.file_id)
     if f.trashed_at: abort(410)
-    if share.password_hash and not session.get(f"share_ok_{token}"):
+    if share.password_hash and not session.get(f"share_ok_{share.token}"):
         abort(401)
     return _serve_file_data(f, attachment=False)
 
@@ -1449,6 +1532,26 @@ def _demote_all_users_to_free():
         app.logger.warning("plan demotion failed: %s", e)
 
 
+def _add_share_alias_column_if_missing():
+    """Add the share.alias column on databases that already exist before
+    the alias feature was introduced. SQLAlchemy create_all doesn't ALTER
+    existing tables, so we issue a dialect-agnostic ALTER TABLE."""
+    try:
+        db.session.execute(db.text(
+            "ALTER TABLE share ADD COLUMN alias VARCHAR(60)"
+        ))
+        try:
+            db.session.execute(db.text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS ix_share_alias ON share (alias)"
+            ))
+        except Exception:
+            pass
+        db.session.commit()
+        app.logger.info("share.alias column added")
+    except Exception:
+        db.session.rollback()
+
+
 def _make_shares_permanent_once():
     """Convert pre-existing no-password auto-shares to permanent links.
     Auto-shares used to expire after 7 days; if you'd given someone a link,
@@ -1472,6 +1575,7 @@ def _make_shares_permanent_once():
 with app.app_context():
     db.create_all()
     _migrate_sqlite_to_postgres()
+    _add_share_alias_column_if_missing()
     _make_shares_permanent_once()
     _demote_all_users_to_free()
     # Lightweight migration: add missing columns on SQLite

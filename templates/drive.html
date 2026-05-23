@@ -224,6 +224,23 @@
       <input type="text" id="shareUrl" readonly>
       <button class="btn btn-primary" id="copyBtn">Copy</button>
     </div>
+
+    <div class="share-qr-row">
+      <img id="shareQr" class="share-qr" alt="QR code for share link" loading="lazy">
+      <div class="share-qr-hint">
+        <strong>Scan to open</strong>
+        <span>Point another phone's camera at this code to download instantly.</span>
+      </div>
+    </div>
+
+    <label class="expiry-label">Pretty link (optional)</label>
+    <div class="share-row alias-row">
+      <span class="alias-prefix" id="aliasPrefix">/s/</span>
+      <input type="text" id="shareAlias" placeholder="my-photo" maxlength="60" autocapitalize="none" autocorrect="off" spellcheck="false">
+      <button class="btn btn-primary" id="aliasSave">Save</button>
+    </div>
+    <div class="alias-hint" id="aliasHint">Lowercase letters, digits, hyphens. 4–60 chars.</div>
+
     <label class="expiry-label">Expires in</label>
     <select id="shareExpiry" class="select">
       <option value="">Never</option>

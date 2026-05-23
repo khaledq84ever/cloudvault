@@ -11,3 +11,4 @@ APScheduler==3.10.4
 psycopg2-binary==2.9.9
 flask-sock==0.7.0
 simple-websocket==1.0.0
+qrcode==7.4.2

@@ -611,11 +611,15 @@ async function bulkMove(targetFolder) {
 
 // ---------- Share ----------
 let currentShareFileId = null;
+let currentShareToken = null;
 async function openShare(fileId) {
   currentShareFileId = fileId;
+  currentShareToken = null;
   $('#shareExpiry').value = '';
   $('#sharePassword').value = '';
   $('#shareAllowDownload').checked = true;
+  $('#shareAlias').value = '';
+  setAliasHint('Lowercase letters, digits, hyphens. 4–60 chars.', '');
   await regenShare();
   $('#shareModal').hidden = false;
 }
@@ -629,7 +633,45 @@ async function regenShare() {
       allow_download: $('#shareAllowDownload').checked,
     })
   });
+  currentShareToken = data.token;
   $('#shareUrl').value = data.url;
+  const qrEl = document.getElementById('shareQr');
+  if (qrEl && data.qr_url) {
+    qrEl.src = data.qr_url + '?t=' + Date.now();
+  }
+}
+function setAliasHint(text, kind) {
+  const el = document.getElementById('aliasHint');
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'alias-hint' + (kind ? ' ' + kind : '');
+}
+async function saveAlias() {
+  if (!currentShareToken) return;
+  const alias = ($('#shareAlias').value || '').trim().toLowerCase();
+  if (!alias) {
+    setAliasHint('Enter an alias first.', 'error');
+    return;
+  }
+  if (!/^[a-z0-9][a-z0-9-]{2,58}[a-z0-9]$/.test(alias)) {
+    setAliasHint('4–60 chars, lowercase a–z 0–9 and hyphens, no leading/trailing hyphen.', 'error');
+    return;
+  }
+  try {
+    const r = await api(`/api/share/${currentShareToken}/alias`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ alias })
+    });
+    $('#shareUrl').value = r.url;
+    setAliasHint(`Saved — link is now ${r.url}`, 'success');
+    toast('Pretty link saved', 'success');
+    // Refresh QR for the new alias.
+    const qrEl = document.getElementById('shareQr');
+    if (qrEl) qrEl.src = `/s/${encodeURIComponent(alias)}/qr.png?t=` + Date.now();
+    loadList(); // file_to_dict will now return the alias URL
+  } catch (e) {
+    setAliasHint(e.message || 'Could not save alias', 'error');
+  }
 }
 $('#shareClose').onclick = () => $('#shareModal').hidden = true;
 $('#copyBtn').onclick = () => {
@@ -640,6 +682,12 @@ $('#copyBtn').onclick = () => {
 $('#shareExpiry').onchange = regenShare;
 $('#shareAllowDownload').onchange = regenShare;
 $('#sharePassword').addEventListener('change', regenShare);
+const _aliasSaveBtn = document.getElementById('aliasSave');
+if (_aliasSaveBtn) _aliasSaveBtn.onclick = saveAlias;
+const _aliasInput = document.getElementById('shareAlias');
+if (_aliasInput) _aliasInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); saveAlias(); }
+});
 
 // ---------- Preview ----------
 let previewIndex = -1, previewable = [];
