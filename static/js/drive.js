@@ -1329,6 +1329,31 @@ $('#emptyTrash').onclick = async () => {
 };
 
 // ---------- Search ----------
+// Toggle .scrolled on the topbar so it frosts in once content scrolls
+// behind it. rAF-throttled so we don't churn on every scroll event.
+let _topbarTicking = false;
+function _updateTopbarScrolled() {
+  const tb = document.querySelector('.topbar');
+  if (!tb) return;
+  const past = window.scrollY > 8;
+  tb.classList.toggle('scrolled', past);
+  const fab = document.getElementById('scrollTopBtn');
+  if (fab) fab.classList.toggle('visible', window.scrollY > 400);
+  _topbarTicking = false;
+}
+window.addEventListener('scroll', () => {
+  if (!_topbarTicking) {
+    _topbarTicking = true;
+    requestAnimationFrame(_updateTopbarScrolled);
+  }
+}, { passive: true });
+const _scrollTopBtn = document.getElementById('scrollTopBtn');
+if (_scrollTopBtn) _scrollTopBtn.onclick = () => {
+  // Honour OS-level reduce-motion — instant jump for those users.
+  const prefersReduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.scrollTo({ top: 0, behavior: prefersReduce ? 'auto' : 'smooth' });
+};
+
 let searchTimer = null;
 let lastSearchValue = '';
 $('#search').oninput = (e) => {
