@@ -23,14 +23,15 @@
 {% include '_appnav.html' %}
 
 <header class="hero">
-  <span class="hero-eyebrow"><span class="dot"></span>500 MB free · no credit card</span>
-  <h1>Your files,<br><span class="grad">anywhere you go.</span></h1>
-  <p>The cleanest cloud storage on the internet. Upload, share, preview, sync across devices in real time.</p>
+  <span class="hero-eyebrow whats-new"><span class="dot"></span>Updated May 2026 · 500 MB free · no card</span>
+  <h1>Cloud storage,<br><span class="grad">finally simple.</span></h1>
+  <p>Upload, share, preview, sync across every device in real time. Built clean — no plans, no paywalls, no ads.</p>
   <div class="hero-cta">
-    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">
+    <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg btn-glow">
       <svg class="ico" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      Get 500 MB free
+      Start free — 500 MB
     </a>
+    <a href="{{ url_for('login') }}" class="btn btn-ghost btn-lg">Sign in</a>
   </div>
 
   <div class="hero-stats">
@@ -126,7 +127,7 @@
 </section>
 
 <footer class="foot">
-  <p>© 2026 CloudVault. Built for safekeeping. <a href="mailto:khaledq8tv@gmail.com">Contact</a></p>
+  <p>© 2026 CloudVault · Last update May 24, 2026 · <a href="mailto:khaledq8tv@gmail.com">Contact</a></p>
 </footer>
 <script src="/static/js/appnav.js?v={{ cb }}" defer></script>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>

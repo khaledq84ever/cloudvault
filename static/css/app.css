@@ -248,8 +248,29 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 .hero-eyebrow .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); box-shadow: 0 0 12px var(--success); animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
 .hero h1 {
-  font-size: clamp(44px, 7vw, 84px); font-weight: 600; line-height: 1.02;
-  letter-spacing: -.035em; position: relative; color: var(--text);
+  font-size: clamp(46px, 7.4vw, 88px); font-weight: 700; line-height: 1.02;
+  letter-spacing: -.038em; position: relative; color: var(--text);
+}
+/* "What's new" eyebrow pill — slightly brighter so the update is visible. */
+.hero-eyebrow.whats-new {
+  background: linear-gradient(135deg, rgba(201,138,62,.18), rgba(212,168,67,.12));
+  border-color: rgba(201,138,62,.45);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 0 24px rgba(201,138,62,.18);
+}
+/* Glowing CTA — bigger tap target, visible halo on phones. */
+.btn-glow {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.24),
+    0 4px 18px rgba(201,138,62,.35),
+    0 0 0 4px rgba(201,138,62,.10);
+}
+.btn-glow:hover {
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.3),
+    0 6px 26px rgba(201,138,62,.45),
+    0 0 0 6px rgba(201,138,62,.14);
 }
 /* Editorial accent — Instrument Serif italic on the second line for
    a single moment of personality. No animation, no gradient. */
