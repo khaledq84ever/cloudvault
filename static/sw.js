@@ -1,13 +1,14 @@
-/* CloudVault service worker — app-shell cache + offline fallback + smart runtime caching */
-const VERSION = 'cv-sw-v15';
+/* CloudVault service worker — network-first for code, pre-cache only immutable assets.
+   Why v16 is the LAST version bump you should ever need: previous versions pre-cached
+   CSS/JS into SHELL_CACHE, and caches.match() returned those stale copies before
+   checking RUNTIME_CACHE. Now CSS/JS go network-first, so every deploy is picked up
+   on the next request without bumping VERSION. */
+const VERSION = 'cv-sw-v16';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
+// Only truly immutable assets here — never CSS/JS that ship with deploys.
 const SHELL_ASSETS = [
-  '/static/css/app.css',
-  '/static/js/drive.js',
-  '/static/js/appnav.js',
-  '/static/js/pwa.js',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
   '/static/icons/apple-touch-icon.png',
@@ -67,23 +68,22 @@ self.addEventListener('fetch', (event) => {
   // API: network-first, no cache (auth-sensitive)
   if (isApiRequest(url)) return;
 
-  // Static: stale-while-revalidate — serve cached instantly, fetch fresh
-  // in background so next pageload gets the update (no more stuck on old
-  // CSS/JS after a deploy).
+  // Static: network-first with runtime-cache fallback. Deploys are picked up
+  // immediately; offline still works for previously-fetched assets.
   if (isStaticAsset(url)) {
     event.respondWith(
-      caches.match(req).then((cached) => {
-        const fetchPromise = fetch(req).then((res) => {
-          if (res.ok) {
-            const clone = res.clone();
-            caches.open(RUNTIME_CACHE).then((c) => c.put(req, clone));
-          }
-          return res;
-        }).catch(() => cached);
-        return cached || fetchPromise;
-      })
+      fetch(req).then((res) => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(RUNTIME_CACHE).then((c) => c.put(req, clone));
+        }
+        return res;
+      }).catch(() =>
+        caches.match(req, { cacheName: RUNTIME_CACHE }).then((cached) =>
+          cached || caches.match(req)
+        )
+      )
     );
-    // Don't await — fire-and-forget the background refresh.
     return;
   }
 
