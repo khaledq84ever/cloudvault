@@ -767,6 +767,53 @@ def api_upload_init():
     return jsonify({"upload_id": upload_id, "chunk_size": 5 * 1024 * 1024})
 
 
+@app.route("/api/upload/<upload_id>", methods=["GET"])
+@login_required
+def api_upload_status(upload_id):
+    """Resume support: clients call this on page load to confirm an
+    in-flight upload still exists server-side, and to learn how many
+    bytes were actually persisted (in case the last chunk was dropped)."""
+    sess = UploadSession.query.filter_by(
+        upload_id=upload_id, owner_id=current_user.id
+    ).first()
+    if not sess:
+        return jsonify({"error": "Upload not found", "code": "upload_missing"}), 404
+    staging = TMP_UPLOAD_DIR / f"{current_user.id}_{upload_id}"
+    on_disk = staging.stat().st_size if staging.exists() else 0
+    # The authoritative receive count is min(sess.received, on_disk) — the
+    # DB might have been updated for a chunk whose disk write was rolled
+    # back, or vice-versa after a crash.
+    received = min(sess.received, on_disk)
+    return jsonify({
+        "upload_id": upload_id,
+        "filename": sess.filename,
+        "size": sess.size,
+        "mime": sess.mime,
+        "received": received,
+        "folder_id": sess.folder_id,
+    })
+
+
+@app.route("/api/upload/<upload_id>", methods=["DELETE"])
+@login_required
+def api_upload_cancel(upload_id):
+    """Cancel an in-flight upload: drop the staging file and the DB row."""
+    sess = UploadSession.query.filter_by(
+        upload_id=upload_id, owner_id=current_user.id
+    ).first()
+    if not sess:
+        return ("", 204)
+    staging = TMP_UPLOAD_DIR / f"{current_user.id}_{upload_id}"
+    try:
+        if staging.exists():
+            staging.unlink()
+    except OSError:
+        pass
+    db.session.delete(sess)
+    db.session.commit()
+    return ("", 204)
+
+
 @app.route("/api/upload/<upload_id>", methods=["PATCH"])
 @login_required
 def api_upload_patch(upload_id):

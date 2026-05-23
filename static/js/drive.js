@@ -772,19 +772,39 @@ async function uploadFiles(files, folderId=null) {
   let done = 0;
   const results = [];
   $('#uploadBar').hidden = false;
+  const pendingList = loadPending();
   for (const f of files) {
     $('#uploadText').textContent = `Uploading ${f.name} (${done+1}/${files.length})`;
     $('#uploadFill').style.width = '0';
     try {
+      // If this file matches an in-flight upload (after a refresh or
+      // explicit Resume click), pick up from where we left off.
+      const match = pendingList.find(e => e.filename === f.name && e.size === f.size);
       let res;
-      if (f.size > 8 * 1024 * 1024) res = await uploadChunked(f, target);
-      else res = await uploadSingle(f, target);
+      if (match) {
+        const status = await api(`/api/upload/${match.upload_id}`).catch(() => null);
+        if (status && status.received < f.size) {
+          $('#uploadText').textContent = `Resuming ${f.name} (${(status.received/f.size*100).toFixed(0)}%)`;
+          res = await uploadChunked(f, match.folder_id, match.upload_id, status.received);
+        } else {
+          // Server lost the session — restart cleanly.
+          dropPending(match.upload_id);
+          res = f.size > 8 * 1024 * 1024 ? await uploadChunked(f, target) : await uploadSingle(f, target);
+        }
+      } else if (f.size > 8 * 1024 * 1024) {
+        res = await uploadChunked(f, target);
+      } else {
+        res = await uploadSingle(f, target);
+      }
       if (res) results.push(res);
       done++;
     } catch (err) {
       toast(`Failed: ${f.name} — ${err.message}`, 'error');
     }
   }
+  // Clear the resume target marker + refresh the banner state.
+  delete window.__resumeTarget;
+  renderResumeBanner();
   $('#uploadBar').hidden = true;
   $('#uploadFill').style.width = '0';
   $('#fileInput').value = '';
@@ -849,22 +869,171 @@ async function uploadSingle(file, folderId) {
   });
 }
 
-async function uploadChunked(file, folderId) {
-  const init = await api('/api/upload/init', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ filename: file.name, size: file.size, mime: file.type, folder_id: folderId })
-  });
-  const chunkSize = init.chunk_size || 5 * 1024 * 1024;
-  const uploadId = init.upload_id;
-  for (let offset = 0; offset < file.size; offset += chunkSize) {
-    const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size));
-    await fetch(`/api/upload/${uploadId}?offset=${offset}`, {
-      method:'PATCH', body: chunk, credentials: 'same-origin'
-    });
-    $('#uploadFill').style.width = (Math.min(offset + chunkSize, file.size) / file.size * 100) + '%';
-  }
-  return await api(`/api/upload/${uploadId}/complete`, { method:'POST' });
+// ---------- Resumable chunked uploads ----------
+// Pending uploads are tracked in localStorage so a tab refresh / crash
+// doesn't waste already-uploaded bytes. After a refresh we can't reach
+// back into the user's filesystem (browser sandbox) — we surface a banner
+// asking them to re-pick the file, then resume from the saved offset.
+const PENDING_KEY = 'cv_pending_uploads';
+
+function loadPending() {
+  try { return JSON.parse(localStorage.getItem(PENDING_KEY) || '[]'); }
+  catch { return []; }
 }
+function savePending(list) {
+  try { localStorage.setItem(PENDING_KEY, JSON.stringify(list)); }
+  catch {}
+}
+function recordPending(entry) {
+  const list = loadPending().filter(e => e.upload_id !== entry.upload_id);
+  list.push(entry);
+  savePending(list);
+}
+function updatePendingOffset(upload_id, offset) {
+  const list = loadPending();
+  const e = list.find(x => x.upload_id === upload_id);
+  if (e) { e.offset = offset; savePending(list); }
+}
+function dropPending(upload_id) {
+  savePending(loadPending().filter(e => e.upload_id !== upload_id));
+}
+
+async function uploadChunked(file, folderId, existingUploadId=null, startOffset=0) {
+  let uploadId = existingUploadId;
+  let chunkSize = 5 * 1024 * 1024;
+  if (!uploadId) {
+    const init = await api('/api/upload/init', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ filename: file.name, size: file.size, mime: file.type, folder_id: folderId })
+    });
+    uploadId = init.upload_id;
+    chunkSize = init.chunk_size || chunkSize;
+    recordPending({
+      upload_id: uploadId,
+      filename: file.name,
+      size: file.size,
+      mime: file.type || '',
+      folder_id: folderId || null,
+      offset: 0,
+      started_at: Date.now(),
+    });
+  }
+  try {
+    for (let offset = startOffset; offset < file.size; offset += chunkSize) {
+      const chunk = file.slice(offset, Math.min(offset + chunkSize, file.size));
+      const res = await fetch(`/api/upload/${uploadId}?offset=${offset}`, {
+        method:'PATCH', body: chunk, credentials: 'same-origin'
+      });
+      if (!res.ok) {
+        let msg = `Upload failed (HTTP ${res.status})`;
+        try { const body = await res.json(); if (body.error) msg = body.error; } catch {}
+        throw new Error(msg);
+      }
+      const done = Math.min(offset + chunkSize, file.size);
+      updatePendingOffset(uploadId, done);
+      $('#uploadFill').style.width = (done / file.size * 100) + '%';
+    }
+    const result = await api(`/api/upload/${uploadId}/complete`, { method:'POST' });
+    dropPending(uploadId);
+    return result;
+  } catch (err) {
+    // Keep the localStorage entry so the user can resume after fixing
+    // the issue (network blip, refresh, etc).
+    throw err;
+  }
+}
+
+async function resumeUpload(entry, file) {
+  // Validate: filename + size must match so we don't write the wrong
+  // bytes into the staging file.
+  if (file.name !== entry.filename || file.size !== entry.size) {
+    toast(`Wrong file: pick "${entry.filename}" (${(entry.size/1024/1024).toFixed(1)} MB)`, 'error');
+    return;
+  }
+  // Confirm with the server that the upload still exists + how many
+  // bytes are actually persisted (may differ from localStorage if a
+  // chunk was dropped after we updated state).
+  let status;
+  try {
+    status = await api(`/api/upload/${entry.upload_id}`);
+  } catch (e) {
+    // 404 = server dropped it (or it's expired). Start fresh.
+    toast('Upload session expired — restarting from the beginning', 'info');
+    dropPending(entry.upload_id);
+    return uploadFiles([file], entry.folder_id);
+  }
+  $('#uploadBar').hidden = false;
+  $('#uploadText').textContent = `Resuming ${file.name} (${(status.received/file.size*100).toFixed(0)}%)`;
+  $('#uploadFill').style.width = (status.received / file.size * 100) + '%';
+  try {
+    const result = await uploadChunked(file, entry.folder_id, entry.upload_id, status.received);
+    $('#uploadBar').hidden = true;
+    $('#uploadFill').style.width = '0';
+    showPostUploadBanner([result]);
+    state.sort = 'date'; state.order = 'desc';
+    const sortSel = document.getElementById('sortSelect');
+    if (sortSel) sortSel.value = 'date|desc';
+    await loadList();
+    loadMe();
+  } catch (err) {
+    $('#uploadBar').hidden = true;
+    toast(`Resume failed: ${err.message}`, 'error');
+  }
+}
+
+async function cancelPending(upload_id) {
+  try { await fetch(`/api/upload/${upload_id}`, { method:'DELETE', credentials: 'same-origin' }); } catch {}
+  dropPending(upload_id);
+  renderResumeBanner();
+}
+
+function renderResumeBanner() {
+  let banner = document.getElementById('resumeBanner');
+  const pending = loadPending();
+  if (pending.length === 0) {
+    if (banner) banner.remove();
+    return;
+  }
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'resumeBanner';
+    banner.className = 'resume-banner';
+    document.body.appendChild(banner);
+  }
+  banner.innerHTML = pending.map(e => {
+    const pct = ((e.offset || 0) / e.size * 100).toFixed(0);
+    const mb = (e.size / 1024 / 1024).toFixed(1);
+    return `
+      <div class="resume-row" data-id="${e.upload_id}">
+        <div class="resume-info">
+          <strong>Upload paused</strong>
+          <span>${escapeHtml(e.filename)} · ${mb} MB · ${pct}% done</span>
+        </div>
+        <div class="resume-actions">
+          <button class="btn btn-primary resume-btn" data-id="${e.upload_id}">Resume</button>
+          <button class="btn btn-ghost cancel-btn" data-id="${e.upload_id}">Cancel</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  banner.querySelectorAll('.resume-btn').forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.id;
+      const entry = loadPending().find(x => x.upload_id === id);
+      if (!entry) return;
+      // Open file picker so user can re-select the file. uploadFiles
+      // checks for matching pending entries by name+size and resumes.
+      window.__resumeTarget = entry;
+      pickFiles();
+    };
+  });
+  banner.querySelectorAll('.cancel-btn').forEach(b => {
+    b.onclick = () => cancelPending(b.dataset.id);
+  });
+}
+
+// Render any pending uploads on page load.
+renderResumeBanner();
 
 // Drag & drop globally
 const dz = $('#dropZone');

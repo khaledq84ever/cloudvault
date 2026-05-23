@@ -436,6 +436,36 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 /* The action sheet is mobile-only — desktop has the toolbar buttons already. */
 @media (min-width: 821px) { .action-sheet { display: none !important; } }
+
+/* ---------- Resume-upload banner ---------- */
+.resume-banner {
+  position: fixed; top: 70px; left: 50%; transform: translateX(-50%);
+  z-index: 270; max-width: 520px; width: calc(100% - 24px);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.resume-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(99,102,241,.12), rgba(168,85,247,.06));
+  border: 1px solid rgba(99,102,241,.35);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.resume-info { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.resume-info strong { font-size: 13px; color: var(--text); }
+.resume-info span {
+  font-size: 12px; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.resume-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.resume-actions .btn { padding: 6px 12px; font-size: 12px; min-height: 0; }
+@media (max-width: 640px) {
+  .resume-banner { top: auto; bottom: 88px; }
+  .resume-row { flex-wrap: wrap; }
+  .resume-actions { width: 100%; justify-content: flex-end; }
+}
 .empty:hover, .empty:focus-visible { background: rgba(99,102,241,.04); outline: none; }
 .empty:focus-visible { box-shadow: 0 0 0 2px var(--primary) inset; }
 .empty:active .empty-ico { transform: scale(.96); }
