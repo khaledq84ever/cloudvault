@@ -1,7 +1,7 @@
 // CloudVault — pro drive (chunked uploads, thumbs, tags, SSE, mobile)
 const state = {
   view: 'my', folder: null, tagId: null,
-  search: '', sort: 'name', order: 'asc',
+  search: '', sort: 'date', order: 'desc',
   layout: localStorage.getItem('cv_layout') || 'list',
   files: [], folders: [], tags: [],
   selected: new Set(),
