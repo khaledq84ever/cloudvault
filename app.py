@@ -178,15 +178,11 @@ def used_bytes(user_id):
     return int(total or 0)
 
 
-AUTO_SHARE_DAYS = 7
-
-
 def _auto_share_for(file_record):
-    """Auto-create a public share link with no password, 7-day expiry."""
+    """Auto-create a permanent public share link (no password, no expiry)."""
     token = secrets.token_urlsafe(16)
-    expires_at = datetime.utcnow() + timedelta(days=AUTO_SHARE_DAYS)
     share = Share(
-        token=token, file_id=file_record.id, expires_at=expires_at,
+        token=token, file_id=file_record.id, expires_at=None,
         password_hash=None, allow_download=True,
     )
     db.session.add(share)
@@ -1270,9 +1266,30 @@ def _migrate_sqlite_to_postgres():
         src.close()
 
 
+def _make_shares_permanent_once():
+    """Convert pre-existing no-password auto-shares to permanent links.
+    Auto-shares used to expire after 7 days; if you'd given someone a link,
+    it would silently break on day 7. This extends them to never expire.
+    Skips password-protected shares (those carry user intent for expiry)."""
+    try:
+        result = db.session.execute(db.text(
+            "UPDATE share SET expires_at = NULL "
+            "WHERE expires_at IS NOT NULL AND password_hash IS NULL"
+        ))
+        if result.rowcount:
+            db.session.commit()
+            app.logger.info("share permanence: extended %d auto-share links", result.rowcount)
+        else:
+            db.session.rollback()
+    except Exception as e:
+        db.session.rollback()
+        app.logger.warning("share permanence migration failed: %s", e)
+
+
 with app.app_context():
     db.create_all()
     _migrate_sqlite_to_postgres()
+    _make_shares_permanent_once()
     # Lightweight migration: add missing columns on SQLite
     try:
         cols = [c["name"] for c in db.session.execute(db.text("PRAGMA table_info(file)")).mappings()]
@@ -1311,7 +1328,7 @@ with app.app_context():
             share = Share(
                 token=secrets.token_urlsafe(16),
                 file_id=fid,
-                expires_at=now + timedelta(days=AUTO_SHARE_DAYS),
+                expires_at=None,
                 password_hash=None,
                 allow_download=True,
             )
