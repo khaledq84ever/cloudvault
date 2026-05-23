@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0c">
+<meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CloudVault">
@@ -19,24 +20,28 @@
 <body class="auth-page">
 <div class="auth-card">
   <a href="/" class="logo center">
-    <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
+    <svg aria-hidden="true" width="42" height="42" viewBox="0 0 24 24" fill="none">
       <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c98a3e"/><stop offset="100%" stop-color="#e0a35a"/></linearGradient></defs>
       <path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="url(#rg)"/>
     </svg>
     <span style="font-size: 22px;">CloudVault</span>
   </a>
-  <h1>Get 15 GB free</h1>
+  <h1>Get 500 MB free</h1>
   <p class="sub">Create your account in seconds</p>
   {% with msgs = get_flashed_messages(with_categories=true) %}
     {% for cat, msg in msgs %}<div class="alert {{cat}}">{{msg}}</div>{% endfor %}
   {% endwith %}
-  <form method="POST">
-    <label>Full name</label>
-    <input type="text" name="name" required autofocus>
-    <label>Email</label>
-    <input type="email" name="email" required>
-    <label>Password <span class="hint">(6+ characters)</span></label>
-    <input type="password" name="password" required minlength="6">
+  <form method="POST" autocomplete="on">
+    <label for="reg-name">Full name</label>
+    <input id="reg-name" type="text" name="name" required autofocus
+           autocomplete="name" autocapitalize="words" spellcheck="false">
+    <label for="reg-email">Email</label>
+    <input id="reg-email" type="email" name="email" required
+           autocomplete="email" inputmode="email" autocapitalize="off"
+           spellcheck="false">
+    <label for="reg-password">Password <span class="hint">(6+ characters)</span></label>
+    <input id="reg-password" type="password" name="password" required minlength="6"
+           autocomplete="new-password">
     <button type="submit" class="btn btn-primary btn-block">Create account</button>
   </form>
   <p class="alt">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></p>

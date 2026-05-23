@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0a0a0c">
+<meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CloudVault">
@@ -19,7 +20,7 @@
 <body class="auth-page">
 <div class="auth-card">
   <a href="/" class="logo center">
-    <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
+    <svg aria-hidden="true" width="42" height="42" viewBox="0 0 24 24" fill="none">
       <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c98a3e"/><stop offset="100%" stop-color="#e0a35a"/></linearGradient></defs>
       <path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="url(#lg)"/>
     </svg>
@@ -30,11 +31,14 @@
   {% with msgs = get_flashed_messages(with_categories=true) %}
     {% for cat, msg in msgs %}<div class="alert {{cat}}">{{msg}}</div>{% endfor %}
   {% endwith %}
-  <form method="POST">
-    <label>Email</label>
-    <input type="email" name="email" required autofocus>
-    <label>Password</label>
-    <input type="password" name="password" required>
+  <form method="POST" autocomplete="on">
+    <label for="login-email">Email</label>
+    <input id="login-email" type="email" name="email" required autofocus
+           autocomplete="email" inputmode="email" autocapitalize="off"
+           spellcheck="false">
+    <label for="login-password">Password</label>
+    <input id="login-password" type="password" name="password" required
+           autocomplete="current-password">
     <button type="submit" class="btn btn-primary btn-block">Sign in</button>
   </form>
   <p class="alt" style="margin-bottom:6px"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></p>

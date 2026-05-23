@@ -47,8 +47,22 @@
   --ease: cubic-bezier(.22,.61,.36,1);
 }
 html, body { height: 100%; }
+html {
+  /* iOS Safari zooms the page if it sees a font-size <16 px on inputs.
+     Disabling text-size-adjust prevents that auto-zoom plus stops Safari
+     from inflating headings in landscape. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Stabilise scroll: layout doesn't reflow when a scrollbar appears. */
+  scrollbar-gutter: stable;
+}
 body {
-  font-family: 'Inter', -apple-system, system-ui, sans-serif;
+  /* System fonts first so first paint isn't a blank rectangle while
+     Inter loads. font-display:swap (set on the @import URL via Google
+     Fonts default) means we get a clean swap-in. */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui,
+               "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-size: 16px;
   background: var(--bg);
   /* No more bright radial glows — a single subtle warm vignette so the
      near-black feels luminous instead of dead-flat. */
@@ -56,15 +70,59 @@ body {
     radial-gradient(1400px 700px at 50% -20%, rgba(201,138,62,.06), transparent 65%);
   background-attachment: fixed;
   color: var(--text);
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv11', 'ss01';
   letter-spacing: -.011em;
+  /* No horizontal scroll on any page, ever. */
+  overflow-x: hidden;
 }
-h1, h2, h3, h4 { font-family: 'Inter', sans-serif; letter-spacing: -.022em; font-weight: 600; color: var(--text); }
-h1 { font-weight: 700; }
+h1, h2, h3, h4 { font-family: 'Inter', sans-serif; letter-spacing: -.022em; font-weight: 600; color: var(--text); line-height: 1.15; }
+h1 { font-weight: 700; line-height: 1.05; }
+p { max-width: 65ch; }
 /* Editorial accent for the few headings that opt-in via .display */
-.display { font-family: 'Instrument Serif', serif; font-style: italic; letter-spacing: -.01em; font-weight: 400; }
+.display { font-family: 'Instrument Serif', serif; font-style: italic; letter-spacing: -.01em; font-weight: 400; line-height: 1.1; }
 a { color: var(--primary); text-decoration: none; transition: color .15s var(--ease); }
+
+/* iOS Safari: blue tap highlight on every interactive element is ugly
+   against the Studio palette. Suppress it; explicit :active styles
+   provide the press feedback instead. */
+a, button, [role="button"], .card, .list-row, .bn-link, .side-link,
+.action-item, .ctx-menu button, .icon-btn, .crumb {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Inputs ≥16 px on mobile so iOS doesn't auto-zoom them. */
+input, select, textarea, button { font-size: 16px; }
+@media (min-width: 641px) {
+  input, select, textarea, button { font-size: 14px; }
+}
+
+/* Reserve hover styles for true hover-capable pointers; on touch
+   devices hover styles "stick" after a tap and look broken. */
+@media (hover: none) {
+  .btn:hover, .card:hover, .list-row:hover, .side-link:hover,
+  .crumb:hover, .ctx-menu button:hover, .icon-btn:hover {
+    background: revert; border-color: revert; transform: none;
+    box-shadow: revert; color: revert;
+  }
+}
+
+/* Disabled buttons should not invite a click. */
+button:disabled, .btn:disabled, [aria-disabled="true"] {
+  cursor: not-allowed; opacity: .55;
+}
+
+/* prefers-reduced-motion: kill non-essential animations and parallax. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 a:hover { color: var(--primary-2); }
 button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
 code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
@@ -254,7 +312,7 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 
 /* ---------- Auth ---------- */
 .auth-page {
-  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+  min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 20px;
   position: relative; overflow: hidden;
 }
 .auth-page::before {
@@ -289,7 +347,7 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 .alert.error { background: rgba(244,63,94,.1); color: var(--danger); border: 1px solid rgba(244,63,94,.3); }
 
 /* ---------- Drive layout ---------- */
-.drive-page { display: flex; flex-direction: column; min-height: 100vh; }
+.drive-page { display: flex; flex-direction: column; min-height: 100dvh; }
 .drive-grid { display: grid; grid-template-columns: 272px 1fr; flex: 1; min-height: 0; }
 .sidebar {
   background: var(--bg-2);
@@ -326,7 +384,7 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 .logout { font-size: 12px; color: var(--muted); }
 .logout:hover { color: var(--primary); }
 
-.main { padding: 22px 32px 100px; display: flex; flex-direction: column; gap: 16px; }
+.main { padding: 24px 32px max(100px, calc(80px + env(safe-area-inset-bottom))); display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .topbar { display: flex; gap: 14px; align-items: center; position: relative; z-index: 60; }
 .search-wrap { flex: 1; position: relative; max-width: 560px; }
 .search-wrap::before { content: "🔍"; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); opacity: .5; font-size: 14px; }
@@ -586,7 +644,7 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 }
 
 /* ---------- Share page ---------- */
-.share-page { min-height: 100vh; background: radial-gradient(800px 400px at 50% 0%, rgba(201,138,62,.12), transparent 60%), var(--bg); }
+.share-page { min-height: 100dvh; background: radial-gradient(800px 400px at 50% 0%, rgba(201,138,62,.12), transparent 60%), var(--bg); }
 .share-wrap { display: flex; align-items: center; justify-content: center; min-height: 80vh; padding: 20px; }
 .share-card { background: var(--panel); border: 1px solid var(--border); padding: 50px 40px; border-radius: 20px; text-align: center; max-width: 480px; }
 .share-ico { font-size: 64px; margin-bottom: 16px; }
@@ -641,6 +699,18 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
   .share-folder-title h1 { font-size: 18px; }
   .share-folder-icon { font-size: 32px; }
   .sf-row { padding: 10px 12px; }
+}
+
+/* ---------- Forgot-password fallback link card ---------- */
+.fallback-link-box {
+  background: var(--panel-2); border: 1px solid var(--border);
+  padding: 14px; border-radius: 10px; margin-top: 16px; text-align: left;
+}
+.fallback-title { margin: 0 0 8px; font-weight: 600; color: var(--text); }
+.fallback-sub { margin: 0 0 10px; font-size: 13px; color: var(--text-2); }
+.fallback-link {
+  font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  word-break: break-all; color: var(--primary); text-decoration: underline;
 }
 
 /* ---------- Page head (editorial title strip) ---------- */
@@ -925,9 +995,11 @@ body.with-details .main { padding-right: 340px; }
   .bottom-nav {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0;
     background: var(--bg-2); border-top: 1px solid var(--border);
-    padding: 8px 4px; z-index: 80; justify-content: space-around;
+    /* Respect iOS home-bar safe area so the nav doesn't sit under the indicator. */
+    padding: 8px 4px max(4px, env(safe-area-inset-bottom));
+    z-index: 80; justify-content: space-around;
   }
-  .bn-link { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); padding: 8px 4px; border-radius: 10px; transition: color .15s var(--ease); }
+  .bn-link { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); padding: 8px 4px; border-radius: 10px; transition: color .15s var(--ease); min-height: 44px; justify-content: center; }
   .bn-link span { font-size: 10px; font-weight: 500; letter-spacing: .01em; }
   .bn-link.active { color: var(--primary); }
   .bn-ico { width: 22px; height: 22px; }
