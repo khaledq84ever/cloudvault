@@ -1,5 +1,5 @@
 /* CloudVault service worker — app-shell cache + offline fallback + smart runtime caching */
-const VERSION = 'cv-sw-v7';
+const VERSION = 'cv-sw-v8';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 

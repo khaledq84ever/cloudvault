@@ -1591,13 +1591,16 @@ def api_events():
 # means external bookmarks and the navbar still resolve.
 @app.route("/pricing")
 def pricing():
+    # Plans collapsed to a single free tier. Keep route so old bookmarks
+    # don't 404, but funnel everyone to the live destination.
     return redirect(url_for("drive") if current_user.is_authenticated else url_for("index"))
 
 
 @app.route("/billing")
 @login_required
 def billing():
-    return redirect(url_for("drive"))
+    # Same — there's no separate billing surface, settings owns plan state.
+    return redirect(url_for("settings_page"))
 
 
 @app.route("/api/plan/upgrade", methods=["POST"])

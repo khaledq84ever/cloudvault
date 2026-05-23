@@ -49,11 +49,31 @@ function daysSince(iso) {
   if (!iso) return 0;
   return Math.floor((new Date() - new Date(iso)) / 86400000);
 }
+// Inline SVGs for each toast variant. Kept here (not in HTML) so any
+// existing toast(msg, type) call site benefits automatically.
+const TOAST_ICONS = {
+  success: '<svg class="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  error: '<svg class="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+  warn: '<svg class="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  info: '<svg class="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+};
+const TOAST_CLOSE_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
 function toast(msg, type='') {
   const t = $('#toast');
-  t.textContent = msg; t.className = 'toast ' + type; t.hidden = false;
+  const variant = type || 'info';
+  t.className = 'toast ' + (type || '');
+  t.innerHTML = `
+    ${TOAST_ICONS[variant] || TOAST_ICONS.info}
+    <span class="toast-msg"></span>
+    <button type="button" class="toast-close" aria-label="Dismiss">${TOAST_CLOSE_SVG}</button>
+  `;
+  t.querySelector('.toast-msg').textContent = msg;
+  t.querySelector('.toast-close').onclick = () => { t.hidden = true; };
+  t.hidden = false;
   clearTimeout(window.__toastT);
-  window.__toastT = setTimeout(() => t.hidden = true, 2400);
+  // Errors stick around longer — they're usually actionable.
+  const dwell = (type === 'error') ? 4500 : 2600;
+  window.__toastT = setTimeout(() => { t.hidden = true; }, dwell);
 }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -138,9 +158,35 @@ async function loadList() {
   state.files = data.files; state.folders = data.folders;
   state.selected.clear();
   renderBreadcrumb(data.breadcrumb || []);
+  renderPageTitle(data.breadcrumb || []);
   render();
   updateActionBar();
   $('#trashBanner').hidden = state.view !== 'trash';
+}
+
+const VIEW_TITLES = {
+  my: ['My Drive', 'Everything you own.'],
+  recent: ['Recent', 'Files you opened or edited lately.'],
+  starred: ['Starred', 'Items you marked for quick access.'],
+  shared: ['Shared by me', 'Files you’ve given out via a link.'],
+  trash: ['Trash', 'Items here are deleted after 30 days.'],
+  tag: ['Tagged', 'Items matching the selected tag.'],
+};
+function renderPageTitle(crumb) {
+  const titleEl = document.getElementById('pageTitle');
+  const subEl = document.getElementById('pageSub');
+  if (!titleEl) return;
+  // Inside a folder: title becomes the folder name and the subtitle
+  // becomes the path. At root: use the view-specific copy.
+  if (state.folder && crumb.length) {
+    const last = crumb[crumb.length - 1];
+    titleEl.textContent = last.name || 'Folder';
+    subEl.textContent = crumb.map(c => c.name).join(' / ');
+  } else {
+    const [t, s] = VIEW_TITLES[state.view] || VIEW_TITLES.my;
+    titleEl.textContent = t;
+    subEl.textContent = s;
+  }
 }
 
 // ---------- Render ----------
@@ -838,6 +884,15 @@ const _asCamera = document.getElementById('asCamera');
 if (_asCamera) _asCamera.onclick = () => { closeActionSheet(); pickPhoto(); };
 const _asNewFolder = document.getElementById('asNewFolder');
 if (_asNewFolder) _asNewFolder.onclick = () => { closeActionSheet(); newFolder(); };
+const _asShared = document.getElementById('asShared');
+if (_asShared) _asShared.onclick = (e) => {
+  e.preventDefault();
+  closeActionSheet();
+  // Drive the same view-switch the sidebar links use.
+  state.view = 'shared'; state.folder = null;
+  document.querySelectorAll('.side-link, .bn-link').forEach(el => el.classList.remove('active'));
+  loadList();
+};
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     const sheet = document.getElementById('actionSheet');
