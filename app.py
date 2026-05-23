@@ -476,6 +476,7 @@ def api_me():
         "plan_price": p["price"],
         "used": used_bytes(current_user.id),
         "quota": current_user.quota_bytes(),
+        "max_file": p["max_file"],
     })
 
 
@@ -2015,6 +2016,13 @@ if not os.environ.get("WERKZEUG_RUN_MAIN") and os.environ.get("ENABLE_SCHEDULER"
     try:
         from apscheduler.schedulers.background import BackgroundScheduler
         sched = BackgroundScheduler(daemon=True)
+        # Run once shortly after boot so a freshly-deployed instance doesn't
+        # wait up to 24h for the first sweep, then daily at 03:00 UTC.
+        sched.add_job(
+            purge_trash, "date",
+            run_date=datetime.utcnow() + timedelta(seconds=30),
+            id="purge_trash_initial",
+        )
         sched.add_job(purge_trash, "cron", hour=3, minute=0)
         sched.start()
     except Exception:

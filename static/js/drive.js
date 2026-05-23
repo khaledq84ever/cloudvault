@@ -71,6 +71,8 @@ async function api(url, opts={}) {
 // ---------- Data ----------
 async function loadMe() {
   const me = await api('/api/me');
+  // Cache used/quota so pre-upload quota checks don't need a round-trip.
+  state.me = { used: me.used, quota: me.quota, max_file: me.max_file };
   $('#uname').textContent = me.name;
   const ue = $('#uemail'); if (ue) ue.textContent = me.email;
   $('#avatar').textContent = (me.name || me.email)[0].toUpperCase();
@@ -845,6 +847,28 @@ document.addEventListener('keydown', (e) => {
 
 async function uploadFiles(files, folderId=null) {
   if (!files.length) return;
+  // Pre-flight quota + max-file checks. Catching it client-side gives a
+  // single clear error before any bytes hit the wire, and avoids a long
+  // upload that ends in a 413.
+  if (state.me && state.me.quota) {
+    const total = Array.from(files).reduce((s, f) => s + (f.size || 0), 0);
+    const free = state.me.quota - state.me.used;
+    if (state.me.max_file) {
+      const over = Array.from(files).find(f => f.size > state.me.max_file);
+      if (over) {
+        toast(`"${over.name}" is ${fmtSize(over.size)} — limit per file is ${fmtSize(state.me.max_file)}.`, 'error');
+        return;
+      }
+    }
+    if (total > free) {
+      toast(`Not enough space: need ${fmtSize(total)} but only ${fmtSize(Math.max(0, free))} free.`, 'error');
+      return;
+    }
+    const projected = (state.me.used + total) / state.me.quota * 100;
+    if (projected >= 90 && projected < 100) {
+      toast(`⚠ Storage will be ${projected.toFixed(0)}% full after this upload.`, '');
+    }
+  }
   const target = folderId !== null ? folderId : state.folder;
   let done = 0;
   const results = [];
