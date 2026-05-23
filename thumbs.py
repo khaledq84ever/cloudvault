@@ -1,17 +1,16 @@
-"""Thumbnail generation for images and videos."""
+from __future__ import annotations
+
 import io
 import subprocess
 import tempfile
 from pathlib import Path
-
-try:
-    from PIL import Image
-except ImportError:
-    Image = None
+from typing import Optional
 
 
-def make_image_thumb(data: bytes, size=256) -> bytes | None:
-    if Image is None:
+def make_image_thumb(data: bytes, size: int = 256) -> Optional[bytes]:
+    try:
+        from PIL import Image
+    except ImportError:
         return None
     try:
         img = Image.open(io.BytesIO(data))
@@ -31,8 +30,7 @@ def make_image_thumb(data: bytes, size=256) -> bytes | None:
         return None
 
 
-def make_video_thumb(data: bytes, size=256) -> bytes | None:
-    """Use ffmpeg to extract a frame at 2s and downscale."""
+def make_video_thumb(data: bytes, size: int = 256) -> Optional[bytes]:
     if not _has_ffmpeg():
         return None
     try:
@@ -46,7 +44,6 @@ def make_video_thumb(data: bytes, size=256) -> bytes | None:
             "-frames:v", "1", "-vf", f"scale={size}:-1", dst_path
         ], capture_output=True, timeout=30)
         if r.returncode != 0:
-            # Try frame 0 as fallback
             subprocess.run([
                 "ffmpeg", "-y", "-i", src_path, "-frames:v", "1",
                 "-vf", f"scale={size}:-1", dst_path
@@ -60,7 +57,7 @@ def make_video_thumb(data: bytes, size=256) -> bytes | None:
         return None
 
 
-def _has_ffmpeg():
+def _has_ffmpeg() -> bool:
     try:
         subprocess.run(["ffmpeg", "-version"], capture_output=True, timeout=5)
         return True
@@ -68,7 +65,7 @@ def _has_ffmpeg():
         return False
 
 
-def generate(name: str, mime: str, data: bytes) -> bytes | None:
+def generate(name: str, mime: str, data: bytes) -> Optional[bytes]:
     if mime and mime.startswith("image/"):
         return make_image_thumb(data)
     if mime and mime.startswith("video/"):

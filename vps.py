@@ -1,12 +1,3 @@
-"""Per-user Linux shell ("free VPS") backed by a real bash process.
-
-Each user gets a persistent HOME at DATA_DIR/vps/user_<id>/ and a pty-attached
-bash. When `bwrap` (bubblewrap) is on PATH we jail the shell so it can only
-write inside its own HOME and gets a private /tmp, /proc, PID namespace, and
-no network access by default. When bwrap is missing we fall back to a plain
-HOME-jailed bash so dev environments still work.
-"""
-
 from __future__ import annotations
 
 import fcntl
@@ -21,15 +12,14 @@ import termios
 import threading
 import time
 from pathlib import Path
+from typing import Optional
 
-
-# -------- limits --------
-CPU_SECONDS         = 3600              # 1h cumulative CPU per session
-MAX_PROCESSES       = 64
-MAX_VIRT_MEMORY     = 1024 * 1024 * 1024  # 1 GB
-MAX_FILE_SIZE       = 512 * 1024 * 1024   # 512 MB single file
-DISK_QUOTA          = 500 * 1024 * 1024   # 500 MB total per user
-IDLE_TIMEOUT_SEC    = 30 * 60             # 30 min idle -> kill
+CPU_SECONDS = 3600
+MAX_PROCESSES = 64
+MAX_VIRT_MEMORY = 1024 * 1024 * 1024
+MAX_FILE_SIZE = 512 * 1024 * 1024
+DISK_QUOTA = 500 * 1024 * 1024
+IDLE_TIMEOUT_SEC = 30 * 60
 
 
 def _have_bwrap() -> bool:
@@ -39,17 +29,16 @@ def _have_bwrap() -> bool:
 
 
 class VPSSession:
-    def __init__(self, user_id: int, home_root: Path):
+    def __init__(self, user_id: int, home_root: Path) -> None:
         self.user_id = user_id
         self.home = (home_root / f"user_{user_id}").resolve()
         self.home.mkdir(parents=True, exist_ok=True)
         self.pid: int | None = None
         self.fd: int | None = None
-        self.alive = False
-        self.last_activity = time.time()
+        self.alive: bool = False
+        self.last_activity: float = time.time()
         self._lock = threading.Lock()
 
-    # ---- lifecycle ----
     def start(self, cols: int = 80, rows: int = 24) -> None:
         if self.alive:
             return
@@ -68,7 +57,6 @@ class VPSSession:
             "PS1": r"\[\e[1;32m\]" + username + r"@cloudvault\[\e[0m\]:\[\e[1;34m\]\w\[\e[0m\]\$ ",
         }
 
-        # Drop a welcome motd on first launch
         motd = self.home / ".cloudvault_motd"
         if not motd.exists():
             (self.home / ".bashrc").write_text(
@@ -88,36 +76,21 @@ class VPSSession:
                 "  Type \x1b[1mhelp\x1b[0m or just start hacking.\n\n"
             )
 
-        # First attempt: use bwrap if available. If the child dies almost
-        # immediately (bwrap can't set up user namespaces under hosted
-        # containers like Railway/Fly), fall back to a plain bash so the
-        # user still gets a usable shell.
         use_bwrap = _have_bwrap()
         for attempt in range(2):
             if self._fork_shell(env, use_bwrap):
                 self.set_winsize(rows, cols)
                 return
-            # bwrap died on first try — turn it off and retry with plain bash.
             use_bwrap = False
-        # Both attempts failed — surface a clear error so the WS handler
-        # can tell the client instead of silently disconnecting.
         self.alive = False
         raise RuntimeError("failed to spawn bash (both bwrap and plain fallback)")
 
     def _fork_shell(self, env: dict, use_bwrap: bool) -> bool:
-        """Fork a bash (optionally bwrap-jailed) and return True if it stayed
-        alive for ~150ms (long enough that exec succeeded). On failure the
-        caller can retry with use_bwrap=False."""
         pid, fd = pty.fork()
         if pid == 0:
-            # ---- child ----
-            # RLIMIT_NPROC is per-UID across the WHOLE system, not per-session,
-            # so we can't safely cap it here (would brick the first session if the
-            # host UID already has many processes). Process containment is handled
-            # by bwrap's PID namespace + per-process address-space / CPU / file size.
             try:
-                resource.setrlimit(resource.RLIMIT_CPU,   (CPU_SECONDS, CPU_SECONDS))
-                resource.setrlimit(resource.RLIMIT_AS,    (MAX_VIRT_MEMORY, MAX_VIRT_MEMORY))
+                resource.setrlimit(resource.RLIMIT_CPU, (CPU_SECONDS, CPU_SECONDS))
+                resource.setrlimit(resource.RLIMIT_AS, (MAX_VIRT_MEMORY, MAX_VIRT_MEMORY))
                 resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_FILE_SIZE, MAX_FILE_SIZE))
             except Exception:
                 pass
@@ -154,24 +127,17 @@ class VPSSession:
 
             try:
                 os.execvpe(cmd[0], cmd, env)
-            except FileNotFoundError:
-                os._exit(127)
-            except Exception:
+            except (FileNotFoundError, Exception):
                 os._exit(127)
 
-        # ---- parent ----
         self.pid = pid
         self.fd = fd
-        # Probe: wait briefly to see if the child immediately exited
-        # (which happens when bwrap can't acquire user namespaces).
         time.sleep(0.15)
         try:
             wpid, status = os.waitpid(pid, os.WNOHANG)
         except ChildProcessError:
             wpid, status = 0, 0
         if wpid != 0:
-            # Child already gone — exec must have failed. Reap the fd and
-            # signal the caller so it can retry with use_bwrap=False.
             try:
                 os.close(fd)
             except OSError:
@@ -180,7 +146,6 @@ class VPSSession:
             self.fd = None
             return False
         self.alive = True
-        # NOTE: caller sets winsize once start() returns; we don't have rows/cols here.
         return True
 
     def set_winsize(self, rows: int, cols: int) -> None:
@@ -213,7 +178,6 @@ class VPSSession:
             return b""
         if not r:
             return b""
-        # Re-fetch fd in case close() ran while we were in select()
         fd = self.fd
         if fd is None or fd < 0:
             return b""
@@ -234,9 +198,7 @@ class VPSSession:
             if self.pid:
                 try:
                     os.kill(self.pid, signal.SIGTERM)
-                except ProcessLookupError:
-                    pass
-                except OSError:
+                except (ProcessLookupError, OSError):
                     pass
             if self.fd is not None:
                 try:
@@ -244,19 +206,15 @@ class VPSSession:
                 except OSError:
                     pass
             self.fd = None
-            # Best-effort reap
             if self.pid:
                 try:
                     os.waitpid(self.pid, os.WNOHANG)
-                except ChildProcessError:
-                    pass
-                except OSError:
+                except (ChildProcessError, OSError):
                     pass
             self.pid = None
 
 
 def disk_usage(home: Path) -> int:
-    """Total bytes in user's HOME (best-effort, ignores broken symlinks)."""
     total = 0
     if not home.exists():
         return 0
@@ -270,11 +228,9 @@ def disk_usage(home: Path) -> int:
 
 
 def reset_home(home_root: Path, user_id: int) -> None:
-    """Wipe a user's VPS home dir (for 'reset VPS' button)."""
     target = (home_root / f"user_{user_id}").resolve()
     if not target.exists():
         return
     if not str(target).startswith(str(home_root.resolve())):
-        # paranoia: refuse to delete anything outside the vps root
         return
     shutil.rmtree(target, ignore_errors=True)
