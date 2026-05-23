@@ -77,6 +77,17 @@ async function loadMe() {
   const pct = Math.min(100, (me.used / me.quota) * 100);
   $('#barFill').style.width = pct + '%';
   $('#storageText').textContent = `${fmtSize(me.used)} / ${fmtSize(me.quota)} · ${pct.toFixed(0)}%`;
+  // Topbar storage chip — visible on mobile where the sidebar is hidden.
+  const chip = $('#storageChip');
+  const chipFill = $('#storageChipFill');
+  const chipText = $('#storageChipText');
+  if (chip && chipFill && chipText) {
+    chipFill.style.width = pct + '%';
+    chipText.textContent = `${fmtSize(me.used)} / ${fmtSize(me.quota)}`;
+    chip.classList.toggle('warn', pct >= 80 && pct < 95);
+    chip.classList.toggle('danger', pct >= 95);
+    chip.title = `Storage: ${pct.toFixed(0)}% used (${fmtSize(me.quota - me.used)} free)`;
+  }
   const planEl = $('#ucPlan');
   if (planEl) {
     planEl.textContent = (me.plan_name || 'Free').toUpperCase();
@@ -167,10 +178,24 @@ function render() {
   };
 }
 
-function thumbStyle(item) {
+function thumbImg(item, cls) {
   if (item._type !== 'file' || !item.has_thumb) return '';
-  return `style="background-image:url(/api/files/${item.id}/thumb)"`;
+  const icon = ICONS[classify(item.name, item.mime)] || ICONS.file;
+  return `<img class="${cls}" loading="lazy" decoding="async"
+    src="/api/files/${item.id}/thumb" alt=""
+    data-fallback-icon="${escapeHtml(icon)}" data-fallback-cls="${cls}-fallback">`;
 }
+
+// One delegated handler swaps broken thumbnails for their text icon fallback.
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement)) return;
+  if (!img.dataset.fallbackIcon) return;
+  const span = document.createElement('span');
+  span.className = img.dataset.fallbackCls || 'thumb-fallback';
+  span.textContent = img.dataset.fallbackIcon;
+  img.replaceWith(span);
+}, true);
 
 function buildGridCard(item) {
   const card = document.createElement('div');
@@ -184,7 +209,7 @@ function buildGridCard(item) {
   const star = item.starred ? '<span class="star-flag">⭐</span>' : '';
   const trashDays = item.trashed_at ? `<span class="days-left">${30 - daysSince(item.trashed_at)} d</span>` : '';
   const thumb = (item._type === 'file' && item.has_thumb)
-    ? `<div class="card-thumb" ${thumbStyle(item)}></div>`
+    ? `<div class="card-thumb">${thumbImg(item, 'card-thumb-img')}</div>`
     : `<div class="card-ico">${ico}</div>`;
   const cardShare = (item._type === 'file' && item.share_url)
     ? `<button class="copy-link-btn card-copy" data-share-url="${escapeHtml(item.share_url)}" title="Copy public link" aria-label="Copy public link">
@@ -216,7 +241,7 @@ function buildListRow(item) {
     `<span class="tag-chip-mini" style="background:${t.color}" title="${escapeHtml(t.name)}"></span>`
   ).join('');
   const thumbCell = (item._type === 'file' && item.has_thumb)
-    ? `<span class="row-thumb" ${thumbStyle(item)}></span>`
+    ? `<span class="row-thumb">${thumbImg(item, 'row-thumb-img')}</span>`
     : `<span class="row-ico">${ico}</span>`;
   const rowShare = (item._type === 'file' && item.share_url)
     ? `<button class="icon-btn copy-link-btn" data-share-url="${escapeHtml(item.share_url)}" title="Copy public link" aria-label="Copy public link">
@@ -497,7 +522,7 @@ function openDetails(item) {
   p.hidden = false;
   document.body.classList.add('with-details');
   const iconNode = (item._type === 'file' && item.has_thumb)
-    ? `<div class="dp-thumb" style="background-image:url(/api/files/${item.id}/thumb)"></div>`
+    ? `<div class="dp-thumb">${thumbImg(item, 'dp-thumb-img')}</div>`
     : `<div class="dp-ico">${item._type === 'folder' ? ICONS.folder : ICONS[classify(item.name, item.mime)]}</div>`;
   $('#dpThumbWrap').innerHTML = iconNode;
   $('#dpName').textContent = item.name;
@@ -776,6 +801,7 @@ async function uploadFiles(files, folderId=null) {
   for (const f of files) {
     $('#uploadText').textContent = `Uploading ${f.name} (${done+1}/${files.length})`;
     $('#uploadFill').style.width = '0';
+    resetUploadStats();
     try {
       // If this file matches an in-flight upload (after a refresh or
       // explicit Resume click), pick up from where we left off.
@@ -807,6 +833,7 @@ async function uploadFiles(files, folderId=null) {
   renderResumeBanner();
   $('#uploadBar').hidden = true;
   $('#uploadFill').style.width = '0';
+  resetUploadStats();
   $('#fileInput').value = '';
   if (results.length >= 1) showPostUploadBanner(results);
   else toast(`Upload finished (${done})`, 'success');
@@ -841,6 +868,52 @@ function showPostUploadBanner(files) {
   window.__pubT = setTimeout(() => { wrap.hidden = true; }, 12000);
 }
 
+// Rolling window of {t, bytes} samples used to estimate upload speed.
+// Reset before each file so transient slow-starts don't poison later ETAs.
+let _uploadSamples = [];
+function resetUploadStats() {
+  _uploadSamples = [];
+  $('#uploadSpeed').textContent = '';
+  $('#uploadEta').textContent = '';
+  $('#uploadPct').textContent = '';
+}
+function fmtDuration(seconds) {
+  if (!isFinite(seconds) || seconds < 0) return '—';
+  if (seconds < 1) return '<1s left';
+  if (seconds < 60) return `${Math.ceil(seconds)}s left`;
+  const m = Math.floor(seconds / 60);
+  const s = Math.ceil(seconds % 60);
+  if (m < 60) return `${m}m ${s}s left`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m left`;
+}
+function fmtSpeed(bytesPerSec) {
+  if (!isFinite(bytesPerSec) || bytesPerSec <= 0) return '';
+  return `${fmtSize(bytesPerSec)}/s`;
+}
+function updateUploadProgress(loaded, total) {
+  const pct = total > 0 ? Math.min(100, (loaded / total) * 100) : 0;
+  $('#uploadFill').style.width = pct + '%';
+  $('#uploadPct').textContent = pct.toFixed(0) + '%';
+  const now = performance.now();
+  _uploadSamples.push({ t: now, bytes: loaded });
+  // Keep only the last ~3 seconds of samples for a responsive but stable rate.
+  const cutoff = now - 3000;
+  while (_uploadSamples.length > 2 && _uploadSamples[0].t < cutoff) _uploadSamples.shift();
+  if (_uploadSamples.length >= 2) {
+    const first = _uploadSamples[0];
+    const last = _uploadSamples[_uploadSamples.length - 1];
+    const dt = (last.t - first.t) / 1000;
+    const db = last.bytes - first.bytes;
+    if (dt > 0.1 && db > 0) {
+      const bps = db / dt;
+      $('#uploadSpeed').textContent = fmtSpeed(bps);
+      const remaining = total - loaded;
+      $('#uploadEta').textContent = remaining > 0 ? fmtDuration(remaining / bps) : '';
+    }
+  }
+}
+
 async function uploadSingle(file, folderId) {
   return new Promise((resolve, reject) => {
     const fd = new FormData();
@@ -849,7 +922,7 @@ async function uploadSingle(file, folderId) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/upload');
     xhr.upload.onprogress = (ev) => {
-      if (ev.lengthComputable) $('#uploadFill').style.width = ((ev.loaded / ev.total) * 100) + '%';
+      if (ev.lengthComputable) updateUploadProgress(ev.loaded, ev.total);
     };
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
@@ -931,7 +1004,7 @@ async function uploadChunked(file, folderId, existingUploadId=null, startOffset=
       }
       const done = Math.min(offset + chunkSize, file.size);
       updatePendingOffset(uploadId, done);
-      $('#uploadFill').style.width = (done / file.size * 100) + '%';
+      updateUploadProgress(done, file.size);
     }
     const result = await api(`/api/upload/${uploadId}/complete`, { method:'POST' });
     dropPending(uploadId);

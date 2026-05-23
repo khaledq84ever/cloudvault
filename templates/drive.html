@@ -80,6 +80,11 @@
       <input type="text" id="search" placeholder="Search files...">
     </div>
     <div class="top-actions">
+      <button class="storage-chip" id="storageChip" title="Storage used">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v6c0 1.7 4 3 9 3s9-1.3 9-3V5"/><path d="M3 11v6c0 1.7 4 3 9 3s9-1.3 9-3v-6"/></svg>
+        <span class="storage-chip-bar"><span class="storage-chip-fill" id="storageChipFill"></span></span>
+        <span class="storage-chip-text" id="storageChipText">— / —</span>
+      </button>
       <button class="btn btn-ghost" data-install-app hidden title="Install CloudVault as an app">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
         Install app
@@ -333,8 +338,15 @@
 </div>
 
 <div id="uploadBar" class="upload-bar" hidden>
-  <div class="upload-text" id="uploadText">Uploading…</div>
+  <div class="upload-head">
+    <div class="upload-text" id="uploadText">Uploading…</div>
+    <div class="upload-stats">
+      <span id="uploadSpeed" class="upload-speed"></span>
+      <span id="uploadEta" class="upload-eta"></span>
+    </div>
+  </div>
   <div class="upload-track"><div class="upload-fill" id="uploadFill"></div></div>
+  <div class="upload-pct" id="uploadPct"></div>
 </div>
 
 <script src="{{ url_for('static', filename='js/drive.js') }}?v={{ cb }}"></script>

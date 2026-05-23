@@ -513,10 +513,20 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 .toast.error { border-color: var(--danger); }
 
 /* ---------- Upload bar ---------- */
-.upload-bar { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; min-width: 280px; z-index: 250; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
-.upload-text { font-size: 13px; margin-bottom: 8px; }
+.upload-bar { position: fixed; bottom: 24px; right: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; min-width: 320px; max-width: 380px; z-index: 250; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+.upload-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+.upload-text { font-size: 13px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.upload-stats { display: flex; gap: 8px; font-size: 11px; color: var(--muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.upload-speed { color: var(--primary); font-weight: 500; }
+.upload-eta { color: var(--muted); }
 .upload-track { height: 6px; background: var(--bg); border-radius: 6px; overflow: hidden; }
 .upload-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-2)); width: 0; transition: width .25s; }
+.upload-pct { font-size: 11px; color: var(--muted); margin-top: 6px; text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) {
+  .upload-bar { left: 12px; right: 12px; bottom: 88px; min-width: 0; max-width: none; }
+  .upload-head { flex-wrap: wrap; }
+  .upload-stats { width: 100%; justify-content: space-between; }
+}
 
 /* ---------- Share page ---------- */
 .share-page { min-height: 100vh; background: radial-gradient(800px 400px at 50% 0%, rgba(59,130,246,.12), transparent 60%), var(--bg); }
@@ -662,11 +672,19 @@ body.with-details .main { padding-right: 340px; }
 
 /* ---------- Thumbnails ---------- */
 .card.has-thumb { padding: 0; overflow: hidden; }
-.card-thumb { width: 100%; height: 120px; background-size: cover; background-position: center; background-color: var(--bg); }
+.card-thumb { width: 100%; height: 120px; background-color: var(--bg); overflow: hidden; }
+.card-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity 240ms ease; }
+.card-thumb-img[src] { opacity: 1; }
 .card.has-thumb .card-name { padding: 6px 8px 0; }
 .card.has-thumb .card-meta { padding: 0 8px 10px; }
-.row-thumb { display: inline-block; width: 30px; height: 30px; background-size: cover; background-position: center; border-radius: 6px; background-color: var(--bg); flex-shrink: 0; }
-.dp-thumb { width: 100%; height: 180px; background-size: cover; background-position: center; border-radius: 12px; background-color: var(--bg); margin: 10px 0 12px; }
+.row-thumb { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; background-color: var(--bg); flex-shrink: 0; overflow: hidden; }
+.row-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dp-thumb { width: 100%; height: 180px; border-radius: 12px; background-color: var(--bg); margin: 10px 0 12px; overflow: hidden; }
+.dp-thumb-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Fallback span shown when a thumbnail image fails to load */
+.card-thumb-img-fallback { display: flex; align-items: center; justify-content: center; width: 100%; height: 120px; font-size: 48px; }
+.row-thumb-img-fallback { font-size: 18px; line-height: 30px; }
+.dp-thumb-img-fallback { display: flex; align-items: center; justify-content: center; width: 100%; height: 180px; font-size: 64px; }
 
 /* ---------- Tag chips ---------- */
 .tag-chip-mini { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-left: 4px; }
@@ -722,6 +740,41 @@ body.with-details .main { padding-right: 340px; }
 .uc-plan.pro { background: rgba(59,130,246,.15); color: var(--primary); }
 .uc-plan.business { background: rgba(212,168,67,.15); color: var(--gold); }
 .uc-storage { font-size: 11px; color: var(--muted); margin-top: 10px; }
+
+/* ---------- Topbar storage chip (visible on all sizes) ---------- */
+.storage-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 36px; padding: 0 12px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text); font-size: 12px;
+  cursor: pointer; transition: background 120ms ease, border-color 120ms ease;
+  white-space: nowrap;
+}
+.storage-chip:hover { background: rgba(99,102,241,.08); border-color: rgba(99,102,241,.4); }
+.storage-chip:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.storage-chip svg { flex-shrink: 0; opacity: .8; }
+.storage-chip-bar {
+  position: relative;
+  width: 70px; height: 6px;
+  background: rgba(255,255,255,.08); border-radius: 6px; overflow: hidden;
+}
+.storage-chip-fill {
+  position: absolute; inset: 0;
+  width: 0; height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-2));
+  border-radius: 6px; transition: width .4s ease, background .3s ease;
+}
+.storage-chip.warn .storage-chip-fill { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.storage-chip.danger .storage-chip-fill { background: linear-gradient(90deg, #dc2626, #ef4444); }
+.storage-chip.danger { border-color: rgba(239,68,68,.5); }
+.storage-chip-text { font-variant-numeric: tabular-nums; font-weight: 500; }
+@media (max-width: 640px) {
+  .storage-chip { padding: 0 10px; height: 32px; gap: 6px; font-size: 11px; }
+  .storage-chip-bar { width: 48px; }
+  .storage-chip svg { display: none; }
+}
 .uc-actions { display: flex; gap: 6px; margin-top: 10px; }
 .uc-actions a { flex: 1; text-align: center; padding: 6px 8px; border-radius: 8px; font-size: 11px; background: var(--bg); color: var(--muted); font-weight: 600; }
 .uc-actions a:hover { color: var(--text); background: var(--panel-2); }
