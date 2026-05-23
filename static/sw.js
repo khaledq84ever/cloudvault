@@ -1,10 +1,13 @@
 /* CloudVault service worker — app-shell cache + offline fallback + smart runtime caching */
-const VERSION = 'cv-sw-v12';
+const VERSION = 'cv-sw-v13';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
 const SHELL_ASSETS = [
   '/static/css/app.css',
+  '/static/js/drive.js',
+  '/static/js/appnav.js',
+  '/static/js/pwa.js',
   '/static/icons/icon-192.png',
   '/static/icons/icon-512.png',
   '/static/icons/apple-touch-icon.png',
@@ -57,20 +60,23 @@ self.addEventListener('fetch', (event) => {
   // API: network-first, no cache (auth-sensitive)
   if (isApiRequest(url)) return;
 
-  // Static: cache-first
+  // Static: stale-while-revalidate — serve cached instantly, fetch fresh
+  // in background so next pageload gets the update (no more stuck on old
+  // CSS/JS after a deploy).
   if (isStaticAsset(url)) {
     event.respondWith(
       caches.match(req).then((cached) => {
-        if (cached) return cached;
-        return fetch(req).then((res) => {
+        const fetchPromise = fetch(req).then((res) => {
           if (res.ok) {
             const clone = res.clone();
             caches.open(RUNTIME_CACHE).then((c) => c.put(req, clone));
           }
           return res;
         }).catch(() => cached);
+        return cached || fetchPromise;
       })
     );
+    // Don't await — fire-and-forget the background refresh.
     return;
   }
 
