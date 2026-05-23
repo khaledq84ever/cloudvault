@@ -146,6 +146,40 @@ function renderTagsSidebar() {
   });
 }
 
+// Stale-while-revalidate cache for /api/files. Renders the cached
+// snapshot instantly (no spinner on tab return) then refreshes in the
+// background and re-renders only if the payload actually changed.
+// localStorage rather than IndexedDB — the payload is small (KB) and
+// localStorage is synchronous, so we skip the IDB ceremony.
+const LIST_CACHE_PREFIX = 'cv_list_';
+const LIST_CACHE_TTL = 1000 * 60 * 30; // 30 min; older than that, ignore.
+function _loadListCache(key) {
+  try {
+    const raw = localStorage.getItem(LIST_CACHE_PREFIX + key);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (Date.now() - obj.t > LIST_CACHE_TTL) return null;
+    return obj.data;
+  } catch { return null; }
+}
+function _saveListCache(key, data) {
+  try { localStorage.setItem(LIST_CACHE_PREFIX + key, JSON.stringify({ t: Date.now(), data })); }
+  catch { /* quota — silently ignore, perf optimization not correctness */ }
+}
+let _lastRenderedKey = '';
+function _applyList(data) {
+  state.files = data.files; state.folders = data.folders;
+  state.selected.clear();
+  renderBreadcrumb(data.breadcrumb || []);
+  renderPageTitle(data.breadcrumb || []);
+  render();
+  updateActionBar();
+  $('#trashBanner').hidden = state.view !== 'trash';
+  // First paint: drop the skeleton placeholder.
+  const skel = document.getElementById('gridSkel');
+  if (skel) skel.classList.add('done');
+}
+
 async function loadList() {
   const p = new URLSearchParams();
   p.set('view', state.view);
@@ -154,14 +188,23 @@ async function loadList() {
   if (state.folder) p.set('folder', state.folder);
   if (state.search) p.set('q', state.search);
   if (state.view === 'tag' && state.tagId) p.set('tag', state.tagId);
+  const key = p.toString();
+
+  // 1) Render cached data instantly (if any) so the grid isn't blank.
+  const cached = _loadListCache(key);
+  if (cached) {
+    _applyList(cached);
+    _lastRenderedKey = JSON.stringify(cached);
+  }
+
+  // 2) Fetch fresh data. Only re-render if it differs from what we drew.
   const data = await api('/api/files?' + p);
-  state.files = data.files; state.folders = data.folders;
-  state.selected.clear();
-  renderBreadcrumb(data.breadcrumb || []);
-  renderPageTitle(data.breadcrumb || []);
-  render();
-  updateActionBar();
-  $('#trashBanner').hidden = state.view !== 'trash';
+  _saveListCache(key, data);
+  const freshKey = JSON.stringify(data);
+  if (freshKey !== _lastRenderedKey) {
+    _applyList(data);
+    _lastRenderedKey = freshKey;
+  }
 }
 
 const VIEW_TITLES = {
@@ -1287,9 +1330,17 @@ $('#emptyTrash').onclick = async () => {
 
 // ---------- Search ----------
 let searchTimer = null;
+let lastSearchValue = '';
 $('#search').oninput = (e) => {
   clearTimeout(searchTimer);
-  searchTimer = setTimeout(() => { state.search = e.target.value.trim(); loadList(); }, 250);
+  searchTimer = setTimeout(() => {
+    const v = e.target.value.trim();
+    // Don't refire when the user just navigated around the same query.
+    if (v === lastSearchValue) return;
+    lastSearchValue = v;
+    state.search = v;
+    loadList();
+  }, 150);
 };
 
 // ---------- Keyboard ----------

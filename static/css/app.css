@@ -713,6 +713,24 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
   word-break: break-all; color: var(--primary); text-decoration: underline;
 }
 
+/* ---------- Skeleton loader (shown until first list payload arrives) ---------- */
+.skel { display: flex; flex-direction: column; gap: 1px; border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border-soft); background: var(--panel); }
+.skel-row {
+  height: 54px;
+  background: linear-gradient(90deg,
+    var(--panel) 0%,
+    var(--panel-2) 50%,
+    var(--panel) 100%);
+  background-size: 200% 100%;
+  animation: skel-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skel-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+/* Once the grid has content, the skeleton goes away. */
+.skel.done { display: none; }
+
 /* ---------- Page head (editorial title strip) ---------- */
 .page-head { padding: 4px 2px 8px; }
 .page-title {

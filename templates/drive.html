@@ -15,6 +15,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
 <title>My Drive — CloudVault</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
 </head>
 <body class="drive-page">
@@ -175,6 +177,16 @@
   </div>
 
   <div class="drop-zone" id="dropZone">
+    <!-- Skeleton placeholder — shown until the first list response arrives.
+         JS removes the .loading class on the grid wrapper, which hides this. -->
+    <div class="skel" id="gridSkel" aria-hidden="true">
+      <div class="skel-row"></div>
+      <div class="skel-row"></div>
+      <div class="skel-row"></div>
+      <div class="skel-row"></div>
+      <div class="skel-row"></div>
+      <div class="skel-row"></div>
+    </div>
     <div id="grid" class="grid view-list"></div>
     <button class="empty" id="empty" type="button" hidden>
       <div class="empty-ico">📂</div>
@@ -422,7 +434,7 @@
   <div class="upload-pct" id="uploadPct"></div>
 </div>
 
-<script src="{{ url_for('static', filename='js/drive.js') }}?v={{ cb }}"></script>
+<script src="{{ url_for('static', filename='js/drive.js') }}?v={{ cb }}" defer></script>
 <script src="/static/js/appnav.js?v={{ cb }}" defer></script>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
 </body>

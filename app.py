@@ -1766,6 +1766,16 @@ def secure_headers(resp):
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
     resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    # Long-cache static assets. Templates already append ?v={{ cb }} where
+    # cb is a per-process token (rotates every deploy), so it's safe to mark
+    # these immutable — a new deploy guarantees a new URL, so users can't be
+    # stuck on a stale asset. Files served from /static/ that don't take a
+    # version query string still cache for an hour as a sensible default.
+    if request.path.startswith("/static/"):
+        if "v" in request.args:
+            resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        else:
+            resp.headers.setdefault("Cache-Control", "public, max-age=3600")
     return resp
 
 
