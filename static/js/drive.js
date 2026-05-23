@@ -706,7 +706,18 @@ async function uploadFiles(files, folderId=null) {
   $('#fileInput').value = '';
   if (results.length >= 1) showPostUploadBanner(results);
   else toast(`Upload finished (${done})`, 'success');
-  loadList(); loadMe();
+  // Force "newest first" after every upload so the new file is unmissable,
+  // even if the user (or stale cache) had a different sort selected.
+  state.sort = 'date'; state.order = 'desc';
+  const sortSel = document.getElementById('sortSelect');
+  if (sortSel) sortSel.value = 'date|desc';
+  await loadList();
+  loadMe();
+  // Scroll the file list into view so the freshly uploaded file is right
+  // under the toolbar on mobile (it's a fixed banner so user might miss it).
+  const mainEl = document.querySelector('.main') || document.scrollingElement || document.documentElement;
+  if (mainEl && mainEl.scrollTo) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function showPostUploadBanner(files) {
