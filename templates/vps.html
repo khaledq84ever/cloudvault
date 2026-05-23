@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free VPS — CloudVault</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/favicon.ico">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
+<style>
+  :root {
+    --vps-bg: #0a0e1a;
+    --vps-panel: #11162a;
+    --vps-border: #1f2942;
+    --vps-text: #e5ecff;
+    --vps-muted: #7c87a8;
+    --vps-accent: #6366f1;
+    --vps-accent-2: #a855f7;
+    --vps-ok: #22c55e;
+    --vps-warn: #f59e0b;
+    --vps-err: #ef4444;
+  }
+  body.vps-page {
+    margin: 0;
+    background: radial-gradient(ellipse at top, #1a1f3a 0%, var(--vps-bg) 70%);
+    color: var(--vps-text);
+    min-height: 100vh;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+  }
+  .vps-wrap {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 16px;
+    padding: 16px;
+    height: calc(100vh - 64px);
+    box-sizing: border-box;
+  }
+  @media (max-width: 900px) {
+    .vps-wrap { grid-template-columns: 1fr; height: auto; }
+    .vps-side { order: 2; }
+  }
+  .vps-side {
+    background: var(--vps-panel);
+    border: 1px solid var(--vps-border);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .vps-title {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 18px; font-weight: 700;
+    background: linear-gradient(90deg, var(--vps-accent), var(--vps-accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .vps-title svg { width: 22px; height: 22px; }
+  .vps-status {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--vps-muted);
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--vps-muted); }
+  .dot.ok { background: var(--vps-ok); box-shadow: 0 0 8px var(--vps-ok); }
+  .dot.err { background: var(--vps-err); box-shadow: 0 0 8px var(--vps-err); }
+  .vps-info {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--vps-border);
+    border-radius: 10px;
+    padding: 12px;
+    font-size: 13px;
+  }
+  .vps-info-row { display: flex; justify-content: space-between; padding: 4px 0; }
+  .vps-info-row span:first-child { color: var(--vps-muted); }
+  .vps-info-row span:last-child  { color: var(--vps-text); font-family: 'SF Mono', Menlo, Consolas, monospace; }
+  .quota-bar {
+    margin-top: 8px;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .quota-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--vps-accent), var(--vps-accent-2));
+    transition: width 0.4s ease;
+  }
+  .vps-actions { display: flex; flex-direction: column; gap: 8px; }
+  .vps-btn {
+    appearance: none; border: 1px solid var(--vps-border);
+    background: rgba(255,255,255,0.03);
+    color: var(--vps-text);
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    transition: background 0.15s, transform 0.05s;
+  }
+  .vps-btn:hover { background: rgba(255,255,255,0.07); }
+  .vps-btn:active { transform: translateY(1px); }
+  .vps-btn.danger { color: #ffb4b4; border-color: rgba(239,68,68,0.3); }
+  .vps-btn.danger:hover { background: rgba(239,68,68,0.1); }
+  .vps-btn.primary {
+    background: linear-gradient(90deg, var(--vps-accent), var(--vps-accent-2));
+    border-color: transparent; color: white;
+  }
+  .vps-tips {
+    font-size: 12px; color: var(--vps-muted); line-height: 1.55;
+    border-top: 1px solid var(--vps-border); padding-top: 12px;
+  }
+  .vps-tips code {
+    background: rgba(255,255,255,0.06);
+    padding: 1px 5px; border-radius: 4px;
+    font-size: 11px; color: #c7d2fe;
+  }
+  .vps-main {
+    background: var(--vps-panel);
+    border: 1px solid var(--vps-border);
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    min-height: 0;
+  }
+  .vps-toolbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--vps-border);
+    background: rgba(0,0,0,0.2);
+  }
+  .vps-traffic { display: flex; gap: 6px; }
+  .vps-traffic span {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #3a4160;
+  }
+  .vps-traffic span:nth-child(1) { background: #ff5f57; }
+  .vps-traffic span:nth-child(2) { background: #febc2e; }
+  .vps-traffic span:nth-child(3) { background: #28c840; }
+  .vps-prompt-label {
+    font-family: 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 13px;
+    color: var(--vps-muted);
+  }
+  .vps-prompt-label b { color: #c7d2fe; font-weight: 600; }
+  .vps-term {
+    flex: 1; min-height: 0;
+    padding: 12px;
+    background: #0b0f1a;
+  }
+  .vps-term .xterm { height: 100%; }
+  .splash {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    background: rgba(10,14,26,0.92);
+    z-index: 5;
+    backdrop-filter: blur(6px);
+  }
+  .splash.hidden { display: none; }
+  .splash-card {
+    text-align: center;
+    padding: 28px 36px;
+  }
+  .splash-spin {
+    width: 36px; height: 36px;
+    margin: 0 auto 14px;
+    border: 3px solid rgba(255,255,255,0.1);
+    border-top-color: var(--vps-accent-2);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .help-pop {
+    position: absolute; right: 16px; bottom: 16px;
+    background: var(--vps-panel);
+    border: 1px solid var(--vps-border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--vps-muted);
+    max-width: 280px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body class="vps-page">
+{% include "_appnav.html" %}
+
+<div class="vps-wrap">
+
+  <aside class="vps-side">
+    <div class="vps-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+        <polyline points="6 9 9 12 6 15"/>
+        <line x1="12" y1="15" x2="16" y2="15"/>
+      </svg>
+      Free VPS
+    </div>
+
+    <div class="vps-status">
+      <span class="dot" id="dot"></span>
+      <span id="statusText">Connecting…</span>
+    </div>
+
+    <div class="vps-info">
+      <div class="vps-info-row"><span>user</span><span id="info-user">—</span></div>
+      <div class="vps-info-row"><span>host</span><span id="info-host">cloudvault</span></div>
+      <div class="vps-info-row"><span>memory</span><span id="info-mem">1 GB</span></div>
+      <div class="vps-info-row"><span>cpu</span><span id="info-cpu">1 hr</span></div>
+      <div class="vps-info-row"><span>sandbox</span><span id="info-sandbox">—</span></div>
+      <div class="vps-info-row" style="margin-top:6px"><span>disk</span><span id="info-disk">0 / 500 MB</span></div>
+      <div class="quota-bar"><div class="quota-fill" id="quota-fill" style="width:0%"></div></div>
+    </div>
+
+    <div class="vps-actions">
+      <button class="vps-btn primary" id="btn-reconnect">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Reconnect
+      </button>
+      <button class="vps-btn" id="btn-clear">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+        Clear screen
+      </button>
+      <button class="vps-btn danger" id="btn-reset">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        Reset VPS (wipe HOME)
+      </button>
+    </div>
+
+    <div class="vps-tips">
+      Try: <code>ls</code> · <code>pwd</code> · <code>python3</code> · <code>vim file.txt</code> · <code>echo "hi" &gt; note.txt</code><br>
+      Files in <code>~</code> persist across reconnects.<br>
+      No internet from inside (sandboxed). 30 min idle timeout.
+    </div>
+  </aside>
+
+  <div class="vps-main" style="position:relative">
+    <div class="vps-toolbar">
+      <div class="vps-traffic"><span></span><span></span><span></span></div>
+      <div class="vps-prompt-label"><b id="tb-user">user</b>@<b>cloudvault</b>:<b>~</b></div>
+    </div>
+    <div class="vps-term" id="term"></div>
+    <div class="splash" id="splash">
+      <div class="splash-card">
+        <div class="splash-spin"></div>
+        <div style="font-weight:600;font-size:15px">Booting your Ubuntu shell…</div>
+        <div style="font-size:12px;color:var(--vps-muted);margin-top:6px">Spinning up a private sandboxed bash</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@xterm/addon-fit@0.10.0/lib/addon-fit.js"></script>
+<script>
+(function(){
+  const term = new Terminal({
+    cursorBlink: true,
+    fontFamily: '"SF Mono", Menlo, Consolas, "Liberation Mono", monospace',
+    fontSize: 14,
+    theme: {
+      background: '#0b0f1a',
+      foreground: '#e5ecff',
+      cursor: '#a855f7',
+      cursorAccent: '#0b0f1a',
+      selectionBackground: 'rgba(99,102,241,0.35)',
+      black: '#1a1f3a',
+      red: '#ef4444',
+      green: '#22c55e',
+      yellow: '#f59e0b',
+      blue: '#6366f1',
+      magenta: '#a855f7',
+      cyan: '#06b6d4',
+      white: '#e5ecff',
+      brightBlack: '#7c87a8',
+      brightRed: '#fca5a5',
+      brightGreen: '#86efac',
+      brightYellow: '#fcd34d',
+      brightBlue: '#a5b4fc',
+      brightMagenta: '#d8b4fe',
+      brightCyan: '#67e8f9',
+      brightWhite: '#ffffff',
+    },
+    allowProposedApi: true,
+  });
+  const fit = new FitAddon.FitAddon();
+  term.loadAddon(fit);
+  term.open(document.getElementById('term'));
+  setTimeout(() => { try { fit.fit(); } catch(e){} }, 50);
+
+  const dot = document.getElementById('dot');
+  const statusText = document.getElementById('statusText');
+  const splash = document.getElementById('splash');
+
+  function setStatus(state, msg){
+    dot.classList.remove('ok','err');
+    if (state === 'ok')  dot.classList.add('ok');
+    if (state === 'err') dot.classList.add('err');
+    statusText.textContent = msg;
+  }
+
+  let ws = null;
+  let reconnectTimer = null;
+
+  function connect(){
+    if (ws) { try { ws.close(); } catch(e){} ws = null; }
+    setStatus('', 'Connecting…');
+    splash.classList.remove('hidden');
+
+    const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    ws = new WebSocket(`${proto}//${location.host}/api/vps/ws`);
+
+    ws.onopen = () => {
+      setStatus('ok', 'Connected');
+      sendResize();
+    };
+    ws.onmessage = (ev) => {
+      try {
+        const m = JSON.parse(ev.data);
+        if (m.type === 'output') {
+          if (!splash.classList.contains('hidden')) splash.classList.add('hidden');
+          term.write(m.data);
+        } else if (m.type === 'exit') {
+          setStatus('err', 'Session ended');
+          term.write('\r\n\x1b[33m[connection closed]\x1b[0m\r\n');
+        } else if (m.type === 'error') {
+          setStatus('err', m.msg || 'Error');
+          splash.classList.add('hidden');
+          term.write(`\r\n\x1b[31m[error] ${m.msg}\x1b[0m\r\n`);
+        }
+      } catch(e){}
+    };
+    ws.onclose = () => {
+      setStatus('err', 'Disconnected');
+      term.write('\r\n\x1b[33m[disconnected — click Reconnect]\x1b[0m\r\n');
+    };
+    ws.onerror = () => { setStatus('err', 'Error'); };
+  }
+
+  function sendInput(d){
+    if (ws && ws.readyState === 1) ws.send(JSON.stringify({type:'input', data:d}));
+  }
+  function sendResize(){
+    if (!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({type:'resize', cols: term.cols, rows: term.rows}));
+  }
+
+  term.onData(d => sendInput(d));
+  window.addEventListener('resize', () => { try { fit.fit(); sendResize(); } catch(e){} });
+
+  // -- side panel buttons --
+  document.getElementById('btn-reconnect').onclick = () => connect();
+  document.getElementById('btn-clear').onclick = () => term.clear();
+  document.getElementById('btn-reset').onclick = async () => {
+    if (!confirm('Wipe your VPS HOME directory? All files will be deleted.')) return;
+    await fetch('/api/vps/reset', {method:'POST'});
+    if (ws) { try { ws.close(); } catch(e){} }
+    setTimeout(connect, 300);
+    refreshInfo();
+  };
+
+  // -- info polling --
+  async function refreshInfo(){
+    try {
+      const r = await fetch('/api/vps/info');
+      const j = await r.json();
+      document.getElementById('info-user').textContent = j.username;
+      document.getElementById('info-host').textContent = j.hostname;
+      document.getElementById('info-mem').textContent = (j.memory_bytes / (1024**3)).toFixed(0) + ' GB';
+      document.getElementById('info-cpu').textContent = Math.round(j.cpu_seconds/60) + ' min';
+      document.getElementById('info-sandbox').textContent = j.sandboxed ? 'bwrap ✓' : 'home-jail';
+      const usedMB = (j.disk_used / (1024**2)).toFixed(1);
+      const quotaMB = Math.round(j.disk_quota / (1024**2));
+      document.getElementById('info-disk').textContent = `${usedMB} / ${quotaMB} MB`;
+      const pct = Math.min(100, (j.disk_used / j.disk_quota) * 100);
+      document.getElementById('quota-fill').style.width = pct + '%';
+      document.getElementById('tb-user').textContent = j.username;
+    } catch(e){}
+  }
+  refreshInfo();
+  setInterval(refreshInfo, 8000);
+
+  connect();
+})();
+</script>
+</body>
+</html>

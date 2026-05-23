@@ -1,8 +1,11 @@
 import os
 import io
+import json
+import time
 import uuid
 import secrets
 import mimetypes
+import threading
 import zipfile
 import queue
 from datetime import datetime, timedelta
@@ -24,6 +27,8 @@ from werkzeug.utils import secure_filename
 from storage import get_storage
 import events
 import thumbs
+import vps as vps_mod
+from flask_sock import Sock
 
 BASE_DIR = Path(__file__).parent.resolve()
 DATA_DIR = Path(os.environ.get("DATA_DIR", BASE_DIR))
@@ -31,6 +36,8 @@ INSTANCE_DIR = DATA_DIR / "instance"
 INSTANCE_DIR.mkdir(exist_ok=True, parents=True)
 TMP_UPLOAD_DIR = DATA_DIR / "tmp_uploads"
 TMP_UPLOAD_DIR.mkdir(exist_ok=True, parents=True)
+VPS_ROOT = DATA_DIR / "vps"
+VPS_ROOT.mkdir(exist_ok=True, parents=True)
 
 app = Flask(__name__)
 
@@ -71,6 +78,10 @@ login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
 limiter = Limiter(get_remote_address, app=app, default_limits=[])
+
+# WebSocket support (used by the Free VPS terminal)
+sock = Sock(app)
+app.config["SOCK_SERVER_OPTIONS"] = {"ping_interval": 25}
 
 storage = get_storage(DATA_DIR)
 
@@ -1153,6 +1164,129 @@ def billing():
 @login_required
 def api_plan_upgrade():
     return jsonify({"error": "Plans are no longer offered — everyone is on the free 500 MB tier."}), 410
+
+
+
+# ---------------- Free VPS (per-user Ubuntu shell) ----------------
+import json as _json
+import threading as _threading
+
+
+@app.route("/vps")
+@login_required
+def vps_page():
+    return render_template("vps.html", user=current_user)
+
+
+@app.route("/api/vps/info")
+@login_required
+def api_vps_info():
+    home = VPS_ROOT / f"user_{current_user.id}"
+    used = vps_mod.disk_usage(home) if home.exists() else 0
+    return jsonify({
+        "username": f"user{current_user.id}",
+        "hostname": "cloudvault",
+        "disk_used": used,
+        "disk_quota": vps_mod.DISK_QUOTA,
+        "cpu_seconds": vps_mod.CPU_SECONDS,
+        "memory_bytes": vps_mod.MAX_VIRT_MEMORY,
+        "idle_timeout": vps_mod.IDLE_TIMEOUT_SEC,
+        "sandboxed": vps_mod._have_bwrap(),
+    })
+
+
+@app.route("/api/vps/reset", methods=["POST"])
+@login_required
+def api_vps_reset():
+    vps_mod.reset_home(VPS_ROOT, current_user.id)
+    return jsonify({"ok": True})
+
+
+@sock.route("/api/vps/ws")
+def vps_ws(ws):
+    """WebSocket protocol (JSON text frames):
+       client -> server: {"type":"input","data":"..."} | {"type":"resize","cols":N,"rows":N}
+       server -> client: {"type":"output","data":"..."} | {"type":"exit"}
+    """
+    if not current_user.is_authenticated:
+        try: ws.send(_json.dumps({"type": "error", "msg": "auth required"}))
+        except Exception: pass
+        return
+
+    uid = current_user.id
+
+    # Disk-quota gate before spawning shell
+    home = VPS_ROOT / f"user_{uid}"
+    if home.exists() and vps_mod.disk_usage(home) > vps_mod.DISK_QUOTA:
+        try: ws.send(_json.dumps({"type": "error", "msg": "Disk quota exceeded. Reset VPS to continue."}))
+        except Exception: pass
+        return
+
+    session_obj = vps_mod.VPSSession(uid, VPS_ROOT)
+    try:
+        session_obj.start(cols=100, rows=30)
+    except Exception as e:
+        try: ws.send(_json.dumps({"type": "error", "msg": f"could not start shell: {e}"}))
+        except Exception: pass
+        return
+
+    stop = _threading.Event()
+
+    def pump_pty_to_ws():
+        while not stop.is_set() and session_obj.alive:
+            # Idle timeout
+            if time.time() - session_obj.last_activity > vps_mod.IDLE_TIMEOUT_SEC:
+                try: ws.send(_json.dumps({"type": "output", "data": "\r\n\x1b[31m[session idle - terminated]\x1b[0m\r\n"}))
+                except Exception: pass
+                break
+            chunk = session_obj.read_nonblock(max_bytes=4096, timeout=0.05)
+            if chunk:
+                try:
+                    ws.send(_json.dumps({
+                        "type": "output",
+                        "data": chunk.decode("utf-8", errors="replace"),
+                    }))
+                except Exception:
+                    break
+        try: ws.send(_json.dumps({"type": "exit"}))
+        except Exception: pass
+        try: ws.close()
+        except Exception: pass
+
+    reader = _threading.Thread(target=pump_pty_to_ws, daemon=True)
+    reader.start()
+
+    try:
+        while session_obj.alive:
+            msg = ws.receive(timeout=60)
+            if msg is None:
+                # ping timeout — keep loop alive while pty is alive
+                continue
+            try:
+                payload = _json.loads(msg)
+            except Exception:
+                continue
+            t = payload.get("type")
+            if t == "input":
+                data = payload.get("data", "")
+                if isinstance(data, str):
+                    session_obj.write(data.encode("utf-8", errors="ignore"))
+            elif t == "resize":
+                try:
+                    rows = int(payload.get("rows", 30))
+                    cols = int(payload.get("cols", 100))
+                    session_obj.set_winsize(rows, cols)
+                except Exception:
+                    pass
+    except Exception:
+        pass
+    finally:
+        stop.set()
+        session_obj.close()
+
+
+# import `time` at top of vps section
+import time
 
 
 # ---------------- Healthz ----------------

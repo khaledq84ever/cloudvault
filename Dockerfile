@@ -1,8 +1,11 @@
 FROM python:3.11-slim
 
 # ffmpeg for video thumbnails, libpq for psycopg2
+# Free-VPS tools: bubblewrap (sandbox), bash, coreutils, python3, git, curl, vim-tiny, nano, less, procps
 RUN apt-get update && apt-get install -y --no-install-recommends \
       ffmpeg libpq5 ca-certificates \
+      bubblewrap bash coreutils python3 git curl vim-tiny nano less procps \
+      iproute2 net-tools file tree htop ncdu \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
