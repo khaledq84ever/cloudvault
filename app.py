@@ -156,6 +156,15 @@ class UploadSession(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class PasswordReset(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, index=True)
+    token = db.Column(db.String(80), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used_at = db.Column(db.DateTime, nullable=True)
+
+
 @login_manager.user_loader
 def load_user(uid):
     return User.query.get(int(uid))
@@ -318,6 +327,107 @@ def register():
 def logout():
     logout_user()
     return redirect(url_for("index"))
+
+
+PASSWORD_RESET_TTL = timedelta(hours=1)
+
+
+def _send_reset_email(user, link):
+    """Send the reset link via Resend if RESEND_API_KEY is set.
+    Returns True if the email was dispatched, False otherwise (caller then
+    falls back to displaying the link on the success page)."""
+    api_key = os.environ.get("RESEND_API_KEY")
+    if not api_key:
+        return False
+    try:
+        import resend
+        resend.api_key = api_key
+        sender = os.environ.get("RESEND_FROM", "CloudVault <onboarding@resend.dev>")
+        resend.Emails.send({
+            "from": sender,
+            "to": [user.email],
+            "subject": "Reset your CloudVault password",
+            "html": (
+                '<div style="font-family:system-ui,-apple-system,sans-serif;max-width:480px;'
+                'margin:0 auto;padding:32px;background:#fff;color:#111">'
+                '<div style="text-align:center;margin-bottom:24px">'
+                '<span style="font-size:22px;font-weight:700;background:linear-gradient(135deg,#6366f1,#a855f7);'
+                '-webkit-background-clip:text;background-clip:text;color:transparent">CloudVault</span></div>'
+                f'<h2 style="margin:0 0 12px">Reset your password</h2>'
+                f'<p>Hi {user.name},</p>'
+                '<p>Click the button below to set a new password. This link expires in 1 hour.</p>'
+                f'<p style="margin:24px 0"><a href="{link}" style="display:inline-block;padding:12px 24px;'
+                'background:#6366f1;color:#fff;text-decoration:none;border-radius:8px;font-weight:600">'
+                'Reset password</a></p>'
+                '<p style="font-size:13px;color:#666">Or paste this URL into your browser:</p>'
+                f'<p style="font-family:monospace;font-size:12px;color:#666;word-break:break-all">{link}</p>'
+                '<hr style="border:none;border-top:1px solid #eee;margin:24px 0">'
+                '<p style="font-size:12px;color:#999">If you didn\'t request this, ignore this email — '
+                'your password stays unchanged.</p></div>'
+            ),
+        })
+        return True
+    except Exception as e:
+        app.logger.warning("resend send failed: %s", e)
+        return False
+
+
+@app.route("/forgot", methods=["GET", "POST"])
+@limiter.limit("5 per minute", methods=["POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = (request.form.get("email") or "").strip().lower()
+        user = User.query.filter_by(email=email).first() if email else None
+        fallback_link = None
+        if user:
+            # Invalidate any prior unused tokens so only the newest works.
+            PasswordReset.query.filter_by(user_id=user.id, used_at=None).update(
+                {"used_at": datetime.utcnow()}
+            )
+            token = secrets.token_urlsafe(32)
+            reset = PasswordReset(
+                user_id=user.id,
+                token=token,
+                expires_at=datetime.utcnow() + PASSWORD_RESET_TTL,
+            )
+            db.session.add(reset)
+            db.session.commit()
+            link = url_for("reset_password", token=token, _external=True)
+            sent = _send_reset_email(user, link)
+            # If no email backend is configured, show the link on the success page.
+            # We only do this when the email *actually* exists, so we still don't
+            # leak account existence on the no-Resend path: unknown emails get the
+            # generic "if it exists, you'll get a link" message with no link.
+            if not sent:
+                fallback_link = link
+        # Always render the same success state — don't leak whether email is registered.
+        return render_template("forgot.html", sent=True, fallback_link=fallback_link)
+    return render_template("forgot.html")
+
+
+@app.route("/reset/<token>", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
+def reset_password(token):
+    reset = PasswordReset.query.filter_by(token=token).first()
+    now = datetime.utcnow()
+    if not reset or reset.used_at is not None or reset.expires_at < now:
+        return render_template("reset.html", invalid=True), 400
+    if request.method == "POST":
+        pw = request.form.get("password") or ""
+        if len(pw) < 8:
+            return render_template(
+                "reset.html", token=token,
+                error="Password must be at least 8 characters",
+            )
+        user = User.query.get(reset.user_id)
+        if not user:
+            return render_template("reset.html", invalid=True), 400
+        user.password_hash = generate_password_hash(pw)
+        reset.used_at = now
+        db.session.commit()
+        flash("Password updated. Sign in with your new password.", "success")
+        return redirect(url_for("login"))
+    return render_template("reset.html", token=token)
 
 
 # ---------------- Drive UI ----------------

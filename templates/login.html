@@ -37,6 +37,7 @@
     <input type="password" name="password" required>
     <button type="submit" class="btn btn-primary btn-block">Sign in</button>
   </form>
+  <p class="alt" style="margin-bottom:6px"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></p>
   <p class="alt">New to CloudVault? <a href="{{ url_for('register') }}">Create an account</a></p>
 </div>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
