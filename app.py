@@ -663,6 +663,78 @@ def _add_folder_to_zip(zf, folder, prefix=""):
         _add_folder_to_zip(zf, sub, prefix=f"{prefix}/{sub.name}")
 
 
+def _folder_recursive_size(folder):
+    """Sum the size of every non-trashed file under `folder` (any depth)."""
+    total = db.session.query(db.func.coalesce(db.func.sum(File.size), 0)).filter_by(
+        folder_id=folder.id, owner_id=folder.owner_id, trashed_at=None
+    ).scalar() or 0
+    for sub in Folder.query.filter_by(parent_id=folder.id, owner_id=folder.owner_id, trashed_at=None).all():
+        total += _folder_recursive_size(sub)
+    return int(total)
+
+
+def _folder_is_descendant_of_id(maybe_child_id, ancestor_id):
+    """Cycle-safe: True if `maybe_child_id` sits anywhere under `ancestor_id`.
+    Used so a move-into-self (or its descendants) is silently skipped."""
+    if maybe_child_id is None or ancestor_id is None:
+        return False
+    cur_id = maybe_child_id
+    for _ in range(64):
+        if cur_id == ancestor_id:
+            return True
+        f = Folder.query.get(cur_id)
+        if not f or not f.parent_id:
+            return False
+        cur_id = f.parent_id
+    return False
+
+
+def _copy_file_to(file_obj, dest_folder_id):
+    """Duplicate a File row + its underlying storage blob (and thumb) into
+    `dest_folder_id`. Returns the new File. Storage I/O failures bail out
+    rather than leaving a half-created row."""
+    new_key = uuid.uuid4().hex
+    data = storage.get(file_obj.owner_id, file_obj.storage_key)
+    storage.put(file_obj.owner_id, new_key, data)
+    # Best-effort thumb copy — files without a thumb don't get one created
+    # lazily here; that would require re-running thumbs.generate.
+    if file_obj.has_thumb:
+        try:
+            thumb_data = storage.get(file_obj.owner_id, f"_thumb/{file_obj.storage_key}.jpg")
+            storage.put(file_obj.owner_id, f"_thumb/{new_key}.jpg", thumb_data)
+        except Exception:
+            pass
+    new_file = File(
+        name=file_obj.name,
+        storage_key=new_key,
+        mime=file_obj.mime,
+        size=file_obj.size,
+        owner_id=file_obj.owner_id,
+        folder_id=dest_folder_id,
+        has_thumb=file_obj.has_thumb,
+    )
+    db.session.add(new_file)
+    db.session.flush()
+    return new_file
+
+
+def _copy_folder_to(folder, dest_parent_id):
+    """Recursively duplicate a folder tree under `dest_parent_id`."""
+    if _folder_is_descendant_of_id(dest_parent_id, folder.id) or folder.id == dest_parent_id:
+        # Copying a folder into itself or its own subtree is meaningless.
+        return None
+    new_folder = Folder(
+        name=folder.name, owner_id=folder.owner_id, parent_id=dest_parent_id,
+    )
+    db.session.add(new_folder)
+    db.session.flush()
+    for f in File.query.filter_by(folder_id=folder.id, owner_id=folder.owner_id, trashed_at=None).all():
+        _copy_file_to(f, new_folder.id)
+    for sub in Folder.query.filter_by(parent_id=folder.id, owner_id=folder.owner_id, trashed_at=None).all():
+        _copy_folder_to(sub, new_folder.id)
+    return new_folder
+
+
 # ---------------- API: legacy single-shot upload ----------------
 @app.route("/api/upload", methods=["POST"])
 @login_required
@@ -998,7 +1070,26 @@ def api_bulk():
         tid = int(target_folder) if target_folder else None
         for f in files: f.folder_id = tid
         for fo in folders:
-            if fo.id != tid: fo.parent_id = tid
+            if fo.id != tid and not _folder_is_descendant_of_id(tid, fo.id):
+                fo.parent_id = tid
+    elif action == "copy":
+        tid = int(target_folder) if target_folder else None
+        # Quota check before doing any I/O. Folder sizes are computed
+        # recursively over non-trashed files only (matches the storage
+        # accounted against used_bytes).
+        bytes_needed = sum(f.size or 0 for f in files)
+        for fo in folders:
+            bytes_needed += _folder_recursive_size(fo)
+        plan_quota = current_user.quota_bytes()
+        if used_bytes(current_user.id) + bytes_needed > plan_quota:
+            return jsonify({
+                "error": "Not enough space to copy these items",
+                "code": "quota_exceeded",
+            }), 413
+        for f in files:
+            _copy_file_to(f, tid)
+        for fo in folders:
+            _copy_folder_to(fo, tid)
     elif action == "zip":
         return _bulk_zip(files, folders)
 

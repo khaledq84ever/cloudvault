@@ -305,12 +305,12 @@ function wireItem(el, item) {
   // Swipe-left to reveal actions (mobile)
   if (state.layout === 'list') wireSwipe(el, item);
 
-  // Drag to move
+  // Drag to move (hold Ctrl/Alt to copy)
   el.draggable = true;
   el.addEventListener('dragstart', (e) => {
     if (!state.selected.has(key)) { state.selected.clear(); state.selected.add(key); }
     e.dataTransfer.setData('text/plain', 'cv:items');
-    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.effectAllowed = 'copyMove';
     el.classList.add('dragging');
   });
   el.addEventListener('dragend', () => el.classList.remove('dragging'));
@@ -318,15 +318,24 @@ function wireItem(el, item) {
   if (item._type === 'folder') {
     el.addEventListener('dragover', (e) => {
       if (e.dataTransfer.types.includes('text/plain') || e.dataTransfer.types.includes('Files')) {
-        e.preventDefault(); el.classList.add('drag-into');
+        e.preventDefault();
+        const wantCopy = e.ctrlKey || e.metaKey || e.altKey;
+        e.dataTransfer.dropEffect = wantCopy ? 'copy' : 'move';
+        el.classList.add('drag-into');
+        el.classList.toggle('drag-copy', wantCopy);
       }
     });
-    el.addEventListener('dragleave', () => el.classList.remove('drag-into'));
+    el.addEventListener('dragleave', () => {
+      el.classList.remove('drag-into');
+      el.classList.remove('drag-copy');
+    });
     el.addEventListener('drop', async (e) => {
       e.preventDefault(); e.stopPropagation();
-      el.classList.remove('drag-into');
+      const wantCopy = e.ctrlKey || e.metaKey || e.altKey;
+      el.classList.remove('drag-into'); el.classList.remove('drag-copy');
       if (e.dataTransfer.files.length) return uploadFiles(e.dataTransfer.files, item.id);
-      await bulkMove(item.id);
+      if (wantCopy) await bulkCopy(item.id);
+      else await bulkMove(item.id);
     });
   }
 }
@@ -430,7 +439,8 @@ $('#actionBar').addEventListener('click', async (e) => {
     }
     return;
   }
-  if (action === 'move') return openMoveDialog();
+  if (action === 'move') return openMoveDialog('move');
+  if (action === 'copy') return openMoveDialog('copy');
   if (action === 'delete' && !confirm(`Delete ${fileIds.length + folderIds.length} item(s) forever?`)) return;
   await api('/api/bulk', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -497,7 +507,9 @@ $('#ctxMenu').addEventListener('click', async (e) => {
       toast('Renamed', 'success'); loadList();
     }
   } else if (act === 'move') {
-    state.selected.clear(); state.selected.add(`${type}:${id}`); openMoveDialog();
+    state.selected.clear(); state.selected.add(`${type}:${id}`); openMoveDialog('move');
+  } else if (act === 'copy') {
+    state.selected.clear(); state.selected.add(`${type}:${id}`); openMoveDialog('copy');
   } else if (act === 'restore') {
     const url = type === 'file' ? `/api/files/${id}/restore` : `/api/folders/${id}/restore`;
     await api(url, { method:'POST' });
@@ -603,35 +615,64 @@ function openAddTag(item) {
 function closeDetails() { $('#detailsPanel').hidden = true; document.body.classList.remove('with-details'); }
 $('#dpClose').onclick = closeDetails;
 
-// ---------- Move dialog ----------
-async function openMoveDialog() {
+// ---------- Move / copy dialog ----------
+// `mode` is 'move' or 'copy'. The dialog body is identical, only the
+// title/CTA text and the eventual bulk action differ.
+async function openMoveDialog(mode='move') {
+  state.moveMode = mode;
+  const titleEl = document.getElementById('moveModalTitle');
+  const ctaEl = $('#moveConfirm');
+  if (titleEl) titleEl.textContent = mode === 'copy' ? 'Copy to…' : 'Move to…';
+  if (ctaEl) ctaEl.textContent = mode === 'copy' ? 'Copy here' : 'Move here';
   const tree = await api('/api/folders/tree');
   const wrap = $('#folderTree');
   wrap.innerHTML = `<div class="tree-node" data-id=""><span>📁 My Drive (root)</span></div>` +
     tree.map(f => `<div class="tree-node" data-id="${f.id}"><span>📁 ${escapeHtml(f.path)}</span></div>`).join('');
   state.moveTarget = null;
-  $('#moveConfirm').disabled = true;
+  ctaEl.disabled = true;
   $$('#folderTree .tree-node').forEach(n => n.onclick = () => {
     $$('#folderTree .tree-node').forEach(x => x.classList.remove('active'));
     n.classList.add('active');
     state.moveTarget = n.dataset.id || null;
-    $('#moveConfirm').disabled = false;
+    ctaEl.disabled = false;
   });
   $('#moveModal').hidden = false;
 }
 $('#moveCancel').onclick = () => $('#moveModal').hidden = true;
-$('#moveConfirm').onclick = async () => { $('#moveModal').hidden = true; await bulkMove(state.moveTarget); };
-async function bulkMove(targetFolder) {
+$('#moveConfirm').onclick = async () => {
+  $('#moveModal').hidden = true;
+  if (state.moveMode === 'copy') await bulkCopy(state.moveTarget);
+  else await bulkMove(state.moveTarget);
+};
+function _selectedIds() {
   const fileIds = [], folderIds = [];
   for (const key of state.selected) {
     const [t, id] = key.split(':');
     (t === 'file' ? fileIds : folderIds).push(parseInt(id));
   }
+  return { fileIds, folderIds };
+}
+async function bulkMove(targetFolder) {
+  const { fileIds, folderIds } = _selectedIds();
   await api('/api/bulk', {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'move', file_ids: fileIds, folder_ids: folderIds, target_folder: targetFolder })
   });
   toast('Moved', 'success'); loadList();
+}
+async function bulkCopy(targetFolder) {
+  const { fileIds, folderIds } = _selectedIds();
+  try {
+    const res = await api('/api/bulk', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'copy', file_ids: fileIds, folder_ids: folderIds, target_folder: targetFolder })
+    });
+    toast(`Copied ${res.count} item${res.count === 1 ? '' : 's'}`, 'success');
+    loadList(); loadMe();
+  } catch (err) {
+    // 413 from the server means quota would be exceeded — say so plainly.
+    toast(err.message || 'Copy failed', 'error');
+  }
 }
 
 // ---------- Share ----------

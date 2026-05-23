@@ -131,6 +131,7 @@
     <div class="sep"></div>
     <button class="btn btn-ghost" data-bulk="download">⬇ Download</button>
     <button class="btn btn-ghost" data-bulk="move">📂 Move</button>
+    <button class="btn btn-ghost" data-bulk="copy">📋 Copy</button>
     <button class="btn btn-ghost" data-bulk="star">⭐ Star</button>
     <button class="btn btn-ghost" data-bulk="restore" id="bulkRestore" hidden>↩ Restore</button>
     <button class="btn btn-ghost danger" data-bulk="trash">🗑 Trash</button>
@@ -246,6 +247,7 @@
   <button data-action="star">⭐ Star</button>
   <button data-action="rename">✏ Rename</button>
   <button data-action="move">📂 Move to…</button>
+  <button data-action="copy">📋 Copy to…</button>
   <button data-action="restore" class="restore-only" hidden>↩ Restore</button>
   <button data-action="delete" class="danger">🗑 Trash</button>
 </div>
@@ -295,11 +297,11 @@
   </div>
 </div>
 
-<!-- Move to folder modal -->
+<!-- Move / copy destination picker -->
 <div class="modal" id="moveModal" hidden>
   <div class="modal-card">
-    <h3>Move to…</h3>
-    <p class="muted">Select a destination folder</p>
+    <h3 id="moveModalTitle">Move to…</h3>
+    <p class="muted" id="moveModalSubtitle">Select a destination folder</p>
     <div class="folder-tree" id="folderTree"></div>
     <div class="modal-actions">
       <button class="btn btn-ghost" id="moveCancel">Cancel</button>
