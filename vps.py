@@ -88,8 +88,26 @@ class VPSSession:
                 "  Type \x1b[1mhelp\x1b[0m or just start hacking.\n\n"
             )
 
+        # First attempt: use bwrap if available. If the child dies almost
+        # immediately (bwrap can't set up user namespaces under hosted
+        # containers like Railway/Fly), fall back to a plain bash so the
+        # user still gets a usable shell.
         use_bwrap = _have_bwrap()
+        for attempt in range(2):
+            if self._fork_shell(env, use_bwrap):
+                self.set_winsize(rows, cols)
+                return
+            # bwrap died on first try — turn it off and retry with plain bash.
+            use_bwrap = False
+        # Both attempts failed — surface a clear error so the WS handler
+        # can tell the client instead of silently disconnecting.
+        self.alive = False
+        raise RuntimeError("failed to spawn bash (both bwrap and plain fallback)")
 
+    def _fork_shell(self, env: dict, use_bwrap: bool) -> bool:
+        """Fork a bash (optionally bwrap-jailed) and return True if it stayed
+        alive for ~150ms (long enough that exec succeeded). On failure the
+        caller can retry with use_bwrap=False."""
         pid, fd = pty.fork()
         if pid == 0:
             # ---- child ----
@@ -144,8 +162,26 @@ class VPSSession:
         # ---- parent ----
         self.pid = pid
         self.fd = fd
+        # Probe: wait briefly to see if the child immediately exited
+        # (which happens when bwrap can't acquire user namespaces).
+        time.sleep(0.15)
+        try:
+            wpid, status = os.waitpid(pid, os.WNOHANG)
+        except ChildProcessError:
+            wpid, status = 0, 0
+        if wpid != 0:
+            # Child already gone — exec must have failed. Reap the fd and
+            # signal the caller so it can retry with use_bwrap=False.
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+            self.pid = None
+            self.fd = None
+            return False
         self.alive = True
-        self.set_winsize(rows, cols)
+        # NOTE: caller sets winsize once start() returns; we don't have rows/cols here.
+        return True
 
     def set_winsize(self, rows: int, cols: int) -> None:
         if self.fd is None:
