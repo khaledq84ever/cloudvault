@@ -1883,7 +1883,7 @@ def _add_folder_share_support():
         db.session.commit()
     except Exception:
         db.session.rollback()  # Column likely already exists
-    dialect = db.session.bind.dialect.name
+    dialect = db.engine.dialect.name
     if dialect == "postgresql":
         try:
             db.session.execute(db.text("ALTER TABLE share ALTER COLUMN file_id DROP NOT NULL"))
