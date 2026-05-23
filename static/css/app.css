@@ -346,7 +346,23 @@ code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 .card-meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
 .star-flag { position: absolute; top: 10px; right: 10px; opacity: .95; font-size: 14px; }
 
-.empty { text-align: center; padding: 100px 20px; color: var(--muted); }
+.empty {
+  display: block; width: 100%; text-align: center; padding: 100px 20px;
+  color: var(--muted); background: transparent; border: none; cursor: pointer;
+  font-family: inherit; font-size: inherit; transition: background 160ms ease;
+  border-radius: 16px;
+}
+.empty[hidden] { display: none; }
+.btn-camera { gap: 6px; }
+.btn-camera-label { display: inline; }
+@media (max-width: 640px) {
+  .btn-camera-label { display: none; }
+  .btn-camera { padding-left: 12px; padding-right: 12px; }
+}
+.empty:hover, .empty:focus-visible { background: rgba(99,102,241,.04); outline: none; }
+.empty:focus-visible { box-shadow: 0 0 0 2px var(--primary) inset; }
+.empty:active .empty-ico { transform: scale(.96); }
+.empty-ico { transition: transform 140ms ease; }
 .empty-ico {
   font-size: 56px; margin-bottom: 20px; opacity: .5;
   display: inline-flex; width: 90px; height: 90px; border-radius: 24px;

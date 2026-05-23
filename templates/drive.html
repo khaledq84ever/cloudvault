@@ -92,7 +92,12 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M5 11l7-7 7 7"/><path d="M5 20h14"/></svg>
         Upload
       </button>
-      <input type="file" id="fileInput" multiple hidden>
+      <button class="btn btn-ghost btn-camera" id="btnCamera" aria-label="Take photo and upload">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span class="btn-camera-label">Camera</span>
+      </button>
+      <input type="file" id="fileInput" accept="*/*" multiple hidden>
+      <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" hidden>
 
     </div>
   </header>
@@ -136,11 +141,11 @@
 
   <div class="drop-zone" id="dropZone">
     <div id="grid" class="grid view-list"></div>
-    <div class="empty" id="empty" hidden>
+    <button class="empty" id="empty" type="button" hidden>
       <div class="empty-ico">📂</div>
       <h3>Nothing here yet</h3>
-      <p>Drop files anywhere or click <b>Upload</b> to get started.</p>
-    </div>
+      <p>Tap here to upload your first file, or drop files anywhere on this page.</p>
+    </button>
     <div class="drop-overlay" id="dropOverlay">
       <div class="drop-msg">⬇ Drop to upload</div>
     </div>

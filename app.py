@@ -671,8 +671,26 @@ def api_upload():
     data = f.read()
     size = len(data)
 
-    if used_bytes(current_user.id) + size > current_user.quota_bytes():
-        return jsonify({"error": "Quota exceeded"}), 413
+    plan = current_user.plan_info()
+    max_file = plan["max_file"]
+    if size > max_file:
+        mb = max_file // (1024 * 1024)
+        return jsonify({
+            "error": f"File too large. Max single file is {mb} MB on the free tier.",
+            "code": "file_too_large",
+            "max_bytes": max_file,
+        }), 413
+
+    used = used_bytes(current_user.id)
+    quota = current_user.quota_bytes()
+    if used + size > quota:
+        remaining = max(0, quota - used)
+        rem_mb = remaining / (1024 * 1024)
+        return jsonify({
+            "error": f"Not enough space. You have {rem_mb:.1f} MB left.",
+            "code": "quota_exceeded",
+            "remaining_bytes": remaining,
+        }), 413
 
     storage_key = uuid.uuid4().hex
     mime = f.mimetype or mimetypes.guess_type(f.filename)[0] or "application/octet-stream"
@@ -710,8 +728,27 @@ def api_upload_init():
     folder_id = data.get("folder_id")
     if not filename or size <= 0:
         return jsonify({"error": "filename and size required"}), 400
-    if used_bytes(current_user.id) + size > current_user.quota_bytes():
-        return jsonify({"error": "Quota exceeded"}), 413
+
+    plan = current_user.plan_info()
+    max_file = plan["max_file"]
+    if size > max_file:
+        mb = max_file // (1024 * 1024)
+        return jsonify({
+            "error": f"File too large. Max single file is {mb} MB on the free tier.",
+            "code": "file_too_large",
+            "max_bytes": max_file,
+        }), 413
+
+    used = used_bytes(current_user.id)
+    quota = current_user.quota_bytes()
+    if used + size > quota:
+        remaining = max(0, quota - used)
+        rem_mb = remaining / (1024 * 1024)
+        return jsonify({
+            "error": f"Not enough space. You have {rem_mb:.1f} MB left.",
+            "code": "quota_exceeded",
+            "remaining_bytes": remaining,
+        }), 413
     upload_id = uuid.uuid4().hex
     sess = UploadSession(
         upload_id=upload_id, owner_id=current_user.id,

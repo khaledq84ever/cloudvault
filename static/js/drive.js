@@ -678,9 +678,20 @@ $('#nextBtn').onclick = () => { previewIndex = (previewIndex + 1) % previewable.
 
 // ---------- Chunked upload ----------
 function pickFiles() { $('#fileInput').click(); }
+function pickPhoto() {
+  const cam = $('#cameraInput');
+  if (cam) cam.click(); else pickFiles();
+}
 $('#btnUpload').onclick = pickFiles;
 $('#bnUpload').onclick = pickFiles;
+$('#emptyState') && ($('#emptyState').onclick = pickFiles);
+const _emptyBtn = document.getElementById('empty');
+if (_emptyBtn) _emptyBtn.onclick = pickFiles;
+const _camBtn = document.getElementById('btnCamera');
+if (_camBtn) _camBtn.onclick = pickPhoto;
 $('#fileInput').onchange = (e) => uploadFiles(e.target.files);
+const _camInput = document.getElementById('cameraInput');
+if (_camInput) _camInput.onchange = (e) => uploadFiles(e.target.files);
 
 async function uploadFiles(files, folderId=null) {
   if (!files.length) return;
@@ -751,12 +762,16 @@ async function uploadSingle(file, folderId) {
       if (xhr.status >= 200 && xhr.status < 300) {
         try { resolve(JSON.parse(xhr.responseText)); } catch { resolve(null); }
       } else {
-        let msg = 'Upload failed';
-        try { msg = JSON.parse(xhr.responseText).error || msg; } catch {}
+        let msg = `Upload failed (HTTP ${xhr.status})`;
+        try {
+          const body = JSON.parse(xhr.responseText);
+          if (body && body.error) msg = body.error;
+        } catch {}
         reject(new Error(msg));
       }
     };
-    xhr.onerror = () => reject(new Error('Network error'));
+    xhr.onerror = () => reject(new Error('Network error — check your connection and try again'));
+    xhr.ontimeout = () => reject(new Error('Upload timed out'));
     xhr.send(fd);
   });
 }
