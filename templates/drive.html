@@ -129,12 +129,12 @@
     </div>
     <div class="toolbar-right">
       <select id="sortSelect" class="select" aria-label="Sort files">
-        <option value="name|asc">Name A–Z</option>
-        <option value="name|desc">Name Z–A</option>
-        <option value="date|desc">Newest first</option>
-        <option value="date|asc">Oldest first</option>
-        <option value="size|desc">Largest first</option>
-        <option value="size|asc">Smallest first</option>
+        <option value="name|asc">{% if lang == 'ar' %}الاسم أ–ي{% else %}Name A–Z{% endif %}</option>
+        <option value="name|desc">{% if lang == 'ar' %}الاسم ي–أ{% else %}Name Z–A{% endif %}</option>
+        <option value="date|desc">{% if lang == 'ar' %}الأحدث أولاً{% else %}Newest first{% endif %}</option>
+        <option value="date|asc">{% if lang == 'ar' %}الأقدم أولاً{% else %}Oldest first{% endif %}</option>
+        <option value="size|desc">{% if lang == 'ar' %}الأكبر أولاً{% else %}Largest first{% endif %}</option>
+        <option value="size|asc">{% if lang == 'ar' %}الأصغر أولاً{% else %}Smallest first{% endif %}</option>
       </select>
       <button class="icon-btn" id="viewGrid" title="Grid view" aria-label="Grid view"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></button>
       <button class="icon-btn active" id="viewList" title="List view" aria-label="List view"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
@@ -214,36 +214,36 @@
   <h3 id="dpName">—</h3>
   <div class="dp-meta" id="dpMeta">—</div>
   <div class="dp-actions">
-    <button class="btn btn-ghost btn-block" id="dpPreview"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Preview</button>
-    <button class="btn btn-ghost btn-block" id="dpDownload"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download</button>
-    <button class="btn btn-ghost btn-block" id="dpShare"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> Share</button>
-    <button class="btn btn-ghost btn-block" id="dpRename"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> Rename</button>
-    <button class="btn btn-ghost btn-block" id="dpMove"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg> Move to…</button>
-    <button class="btn btn-ghost btn-block danger" id="dpDelete"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Trash</button>
+    <button class="btn btn-ghost btn-block" id="dpPreview"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> {% if lang == 'ar' %}معاينة{% else %}Preview{% endif %}</button>
+    <button class="btn btn-ghost btn-block" id="dpDownload"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> {% if lang == 'ar' %}تنزيل{% else %}Download{% endif %}</button>
+    <button class="btn btn-ghost btn-block" id="dpShare"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg> {% if lang == 'ar' %}مشاركة{% else %}Share{% endif %}</button>
+    <button class="btn btn-ghost btn-block" id="dpRename"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg> {% if lang == 'ar' %}إعادة تسمية{% else %}Rename{% endif %}</button>
+    <button class="btn btn-ghost btn-block" id="dpMove"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg> {% if lang == 'ar' %}نقل إلى…{% else %}Move to…{% endif %}</button>
+    <button class="btn btn-ghost btn-block danger" id="dpDelete"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> {% if lang == 'ar' %}حذف{% else %}Trash{% endif %}</button>
   </div>
   <div id="dpTags"></div>
   <div class="dp-public-link" id="dpPublicLink" hidden>
     <div class="dp-link-label">
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
-      Share link <span class="dp-link-expiry" id="dpLinkExpiry"></span>
+      {% if lang == 'ar' %}رابط المشاركة{% else %}Share link{% endif %} <span class="dp-link-expiry" id="dpLinkExpiry"></span>
     </div>
     <div class="dp-link-row">
       <input type="text" id="dpLinkInput" readonly>
-      <button class="btn btn-primary copy-link-btn" id="dpCopyLink" data-share-url="" title="Copy share link">Copy</button>
+      <button class="btn btn-primary copy-link-btn" id="dpCopyLink" data-share-url="" title="Copy share link">{% if lang == 'ar' %}نسخ{% else %}Copy{% endif %}</button>
     </div>
     <div class="dp-link-label" style="margin-top: 14px;">
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Direct download
+      {% if lang == 'ar' %}تنزيل مباشر{% else %}Direct download{% endif %}
     </div>
     <div class="dp-link-row">
       <input type="text" id="dpDownloadInput" readonly>
-      <button class="btn btn-primary copy-link-btn" id="dpCopyDownload" data-share-url="" title="Copy direct download link">Copy</button>
+      <button class="btn btn-primary copy-link-btn" id="dpCopyDownload" data-share-url="" title="Copy direct download link">{% if lang == 'ar' %}نسخ{% else %}Copy{% endif %}</button>
     </div>
   </div>
   <div class="dp-info">
-    <div class="info-row"><span>Type</span><span id="dpType">—</span></div>
-    <div class="info-row"><span>Size</span><span id="dpSize">—</span></div>
-    <div class="info-row"><span>Uploaded</span><span id="dpDate">—</span></div>
+    <div class="info-row"><span>{% if lang == 'ar' %}النوع{% else %}Type{% endif %}</span><span id="dpType">—</span></div>
+    <div class="info-row"><span>{% if lang == 'ar' %}الحجم{% else %}Size{% endif %}</span><span id="dpSize">—</span></div>
+    <div class="info-row"><span>{% if lang == 'ar' %}رُفع{% else %}Uploaded{% endif %}</span><span id="dpDate">—</span></div>
   </div>
 </aside>
 
@@ -346,44 +346,44 @@
 <!-- Share modal -->
 <div class="modal" id="shareModal" hidden>
   <div class="modal-card">
-    <h3 id="shareModalTitle">Share link</h3>
-    <p class="muted" id="shareModalSubtitle">Configure who can access this file</p>
+    <h3 id="shareModalTitle">{% if lang == 'ar' %}رابط المشاركة{% else %}Share link{% endif %}</h3>
+    <p class="muted" id="shareModalSubtitle">{% if lang == 'ar' %}تحكم في من يمكنه الوصول لهذا الملف{% else %}Configure who can access this file{% endif %}</p>
     <div class="share-row">
       <input type="text" id="shareUrl" readonly>
-      <button class="btn btn-primary" id="copyBtn">Copy</button>
+      <button class="btn btn-primary" id="copyBtn">{% if lang == 'ar' %}نسخ{% else %}Copy{% endif %}</button>
     </div>
 
     <div class="share-qr-row">
       <img id="shareQr" class="share-qr" alt="QR code for share link" width="220" height="220" loading="lazy" decoding="async">
       <div class="share-qr-hint">
-        <strong>Scan to open</strong>
-        <span>Point another phone's camera at this code to download instantly.</span>
+        <strong>{% if lang == 'ar' %}امسح للفتح{% else %}Scan to open{% endif %}</strong>
+        <span>{% if lang == 'ar' %}وجّه كاميرا هاتف آخر لهذا الرمز للتنزيل فوراً.{% else %}Point another phone's camera at this code to download instantly.{% endif %}</span>
       </div>
     </div>
 
-    <label class="expiry-label">Pretty link (optional)</label>
+    <label class="expiry-label">{% if lang == 'ar' %}رابط مخصص (اختياري){% else %}Pretty link (optional){% endif %}</label>
     <div class="share-row alias-row">
       <span class="alias-prefix" id="aliasPrefix">/s/</span>
-      <input type="text" id="shareAlias" placeholder="my-photo" maxlength="60" autocapitalize="none" autocorrect="off" spellcheck="false">
-      <button class="btn btn-primary" id="aliasSave">Save</button>
+      <input type="text" id="shareAlias" placeholder="{% if lang == 'ar' %}صورتي{% else %}my-photo{% endif %}" maxlength="60" autocapitalize="none" autocorrect="off" spellcheck="false">
+      <button class="btn btn-primary" id="aliasSave">{% if lang == 'ar' %}حفظ{% else %}Save{% endif %}</button>
     </div>
-    <div class="alias-hint" id="aliasHint">Lowercase letters, digits, hyphens. 4–60 chars.</div>
+    <div class="alias-hint" id="aliasHint">{% if lang == 'ar' %}أحرف صغيرة وأرقام وشرطات. 4–60 حرفاً.{% else %}Lowercase letters, digits, hyphens. 4–60 chars.{% endif %}</div>
 
-    <label class="expiry-label">Expires in</label>
+    <label class="expiry-label">{% if lang == 'ar' %}تنتهي بعد{% else %}Expires in{% endif %}</label>
     <select id="shareExpiry" class="select">
-      <option value="">Never</option>
-      <option value="1">1 hour</option>
-      <option value="24">24 hours</option>
-      <option value="168">7 days</option>
+      <option value="">{% if lang == 'ar' %}أبداً{% else %}Never{% endif %}</option>
+      <option value="1">{% if lang == 'ar' %}ساعة{% else %}1 hour{% endif %}</option>
+      <option value="24">{% if lang == 'ar' %}24 ساعة{% else %}24 hours{% endif %}</option>
+      <option value="168">{% if lang == 'ar' %}7 أيام{% else %}7 days{% endif %}</option>
     </select>
-    <label class="expiry-label">Password (optional)</label>
-    <input type="text" id="sharePassword" placeholder="Leave empty for no password" class="select" style="width:100%;">
+    <label class="expiry-label">{% if lang == 'ar' %}كلمة المرور (اختياري){% else %}Password (optional){% endif %}</label>
+    <input type="text" id="sharePassword" placeholder="{% if lang == 'ar' %}اتركه فارغاً للوصول المفتوح{% else %}Leave empty for no password{% endif %}" class="select" style="width:100%;">
     <label class="check-row" style="margin-top:14px;">
       <input type="checkbox" id="shareAllowDownload" checked>
-      <span>Allow download</span>
+      <span>{% if lang == 'ar' %}السماح بالتنزيل{% else %}Allow download{% endif %}</span>
     </label>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="shareClose">Close</button>
+      <button class="btn btn-ghost" id="shareClose">{% if lang == 'ar' %}إغلاق{% else %}Close{% endif %}</button>
     </div>
   </div>
 </div>
@@ -391,12 +391,12 @@
 <!-- Move / copy destination picker -->
 <div class="modal" id="moveModal" hidden>
   <div class="modal-card">
-    <h3 id="moveModalTitle">Move to…</h3>
-    <p class="muted" id="moveModalSubtitle">Select a destination folder</p>
+    <h3 id="moveModalTitle">{% if lang == 'ar' %}نقل إلى…{% else %}Move to…{% endif %}</h3>
+    <p class="muted" id="moveModalSubtitle">{% if lang == 'ar' %}اختر مجلد الوجهة{% else %}Select a destination folder{% endif %}</p>
     <div class="folder-tree" id="folderTree"></div>
     <div class="modal-actions">
-      <button class="btn btn-ghost" id="moveCancel">Cancel</button>
-      <button class="btn btn-primary" id="moveConfirm" disabled>Move here</button>
+      <button class="btn btn-ghost" id="moveCancel">{% if lang == 'ar' %}إلغاء{% else %}Cancel{% endif %}</button>
+      <button class="btn btn-primary" id="moveConfirm" disabled>{% if lang == 'ar' %}نقل هنا{% else %}Move here{% endif %}</button>
     </div>
   </div>
 </div>
