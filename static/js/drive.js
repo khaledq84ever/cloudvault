@@ -558,6 +558,30 @@ $('#sortSelect').onchange = (e) => {
   const [s, o] = e.target.value.split('|');
   state.sort = s; state.order = o; loadList();
 };
+
+// Search input
+let _searchTimer;
+const _searchInput = $('#searchInput');
+const _searchClear = $('#searchClear');
+if (_searchInput) {
+  _searchInput.oninput = () => {
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(() => {
+      state.search = _searchInput.value.trim();
+      if (_searchClear) _searchClear.hidden = !state.search;
+      loadList();
+    }, 280);
+  };
+  if (_searchClear) {
+    _searchClear.onclick = () => {
+      _searchInput.value = '';
+      state.search = '';
+      _searchClear.hidden = true;
+      _searchInput.focus();
+      loadList();
+    };
+  }
+}
 $('#viewGrid').onclick = () => setLayout('grid');
 $('#viewList').onclick = () => setLayout('list');
 function setLayout(l) {
