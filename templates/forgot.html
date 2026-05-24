@@ -29,30 +29,30 @@
   </a>
 
   {% if sent %}
-    <h1>Check your inbox</h1>
-    <p class="sub">If that email is registered, we sent a reset link. It expires in 1 hour.</p>
+    <h1>{% if lang == 'ar' %}تحقق من بريدك{% else %}Check your inbox{% endif %}</h1>
+    <p class="sub">{% if lang == 'ar' %}إذا كان البريد مسجلاً، أرسلنا رابط إعادة التعيين. ينتهي خلال ساعة.{% else %}If that email is registered, we sent a reset link. It expires in 1 hour.{% endif %}</p>
     {% if fallback_link %}
       <div class="fallback-link-box">
-        <p class="fallback-title">Email sending isn't configured on this server.</p>
-        <p class="fallback-sub">Use this link to reset your password:</p>
+        <p class="fallback-title">{% if lang == 'ar' %}البريد الإلكتروني غير مفعّل على هذا الخادم.{% else %}Email sending isn't configured on this server.{% endif %}</p>
+        <p class="fallback-sub">{% if lang == 'ar' %}استخدم هذا الرابط لإعادة تعيين كلمة المرور:{% else %}Use this link to reset your password:{% endif %}</p>
         <a href="{{ fallback_link }}" class="fallback-link">{{ fallback_link }}</a>
       </div>
     {% endif %}
-    <p class="alt"><a href="{{ url_for('login') }}">Back to sign in</a></p>
+    <p class="alt"><a href="{{ url_for('login') }}">{% if lang == 'ar' %}عودة إلى تسجيل الدخول{% else %}Back to sign in{% endif %}</a></p>
   {% else %}
-    <h1>Forgot password?</h1>
-    <p class="sub">Enter your email and we'll send a reset link.</p>
+    <h1>{% if lang == 'ar' %}نسيت كلمة المرور؟{% else %}Forgot password?{% endif %}</h1>
+    <p class="sub">{% if lang == 'ar' %}أدخل بريدك وسنرسل لك رابط إعادة التعيين.{% else %}Enter your email and we'll send a reset link.{% endif %}</p>
     {% with msgs = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in msgs %}<div class="alert {{cat}}">{{msg}}</div>{% endfor %}
     {% endwith %}
     <form method="POST" autocomplete="on">
-      <label for="forgot-email">Email</label>
+      <label for="forgot-email">{% if lang == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}</label>
       <input id="forgot-email" type="email" name="email" required autofocus
              autocomplete="email" inputmode="email" autocapitalize="off"
-             spellcheck="false">
-      <button type="submit" class="btn btn-primary btn-block">Send reset link</button>
+             spellcheck="false" placeholder="{% if lang == 'ar' %}example@email.com{% else %}you@example.com{% endif %}">
+      <button type="submit" class="btn btn-primary btn-block">{% if lang == 'ar' %}إرسال رابط الاستعادة{% else %}Send reset link{% endif %}</button>
     </form>
-    <p class="alt">Remembered it? <a href="{{ url_for('login') }}">Sign in</a></p>
+    <p class="alt">{% if lang == 'ar' %}تذكرتها؟ <a href="{{ url_for('login') }}">سجّل دخولك</a>{% else %}Remembered it? <a href="{{ url_for('login') }}">Sign in</a>{% endif %}</p>
   {% endif %}
 </div>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>

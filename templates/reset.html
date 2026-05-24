@@ -29,20 +29,20 @@
   </a>
 
   {% if invalid %}
-    <h1>Link expired</h1>
-    <p class="sub">This reset link is invalid, expired, or has already been used.</p>
-    <p class="alt"><a href="{{ url_for('forgot_password') }}">Request a new one</a></p>
+    <h1>{% if lang == 'ar' %}الرابط منتهي{% else %}Link expired{% endif %}</h1>
+    <p class="sub">{% if lang == 'ar' %}رابط إعادة التعيين غير صالح أو منتهي أو تم استخدامه.{% else %}This reset link is invalid, expired, or has already been used.{% endif %}</p>
+    <p class="alt"><a href="{{ url_for('forgot_password') }}">{% if lang == 'ar' %}طلب رابط جديد{% else %}Request a new one{% endif %}</a></p>
   {% else %}
-    <h1>Set a new password</h1>
-    <p class="sub">Pick something at least 8 characters long.</p>
+    <h1>{% if lang == 'ar' %}تعيين كلمة مرور جديدة{% else %}Set a new password{% endif %}</h1>
+    <p class="sub">{% if lang == 'ar' %}اختر كلمة مرور بطول 8 أحرف على الأقل.{% else %}Pick something at least 8 characters long.{% endif %}</p>
     {% if error %}<div class="alert error">{{ error }}</div>{% endif %}
     <form method="POST" autocomplete="on">
-      <label for="reset-password">New password</label>
+      <label for="reset-password">{% if lang == 'ar' %}كلمة المرور الجديدة{% else %}New password{% endif %}</label>
       <input id="reset-password" type="password" name="password"
-             minlength="8" required autofocus autocomplete="new-password">
-      <button type="submit" class="btn btn-primary btn-block">Update password</button>
+             minlength="8" required autofocus autocomplete="new-password" placeholder="••••••••">
+      <button type="submit" class="btn btn-primary btn-block">{% if lang == 'ar' %}تحديث كلمة المرور{% else %}Update password{% endif %}</button>
     </form>
-    <p class="alt"><a href="{{ url_for('login') }}">Back to sign in</a></p>
+    <p class="alt"><a href="{{ url_for('login') }}">{% if lang == 'ar' %}عودة إلى تسجيل الدخول{% else %}Back to sign in{% endif %}</a></p>
   {% endif %}
 </div>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>

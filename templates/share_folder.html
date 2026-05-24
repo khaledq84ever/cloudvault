@@ -33,11 +33,11 @@
       <span class="share-folder-icon"><svg class="ico" aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
       <div>
         <h1>{{ root.name }}</h1>
-        <p class="muted">Shared folder · {{ files|length }} file{{ '' if files|length == 1 else 's' }}{% if subfolders %} · {{ subfolders|length }} subfolder{{ '' if subfolders|length == 1 else 's' }}{% endif %}</p>
+        <p class="muted">{% if lang == 'ar' %}مجلد مشارك · {{ files|length }} ملف{% if subfolders %} · {{ subfolders|length }} مجلد فرعي{% endif %}{% else %}Shared folder · {{ files|length }} file{{ '' if files|length == 1 else 's' }}{% if subfolders %} · {{ subfolders|length }} subfolder{{ '' if subfolders|length == 1 else 's' }}{% endif %}{% endif %}</p>
       </div>
     </div>
     {% if share.allow_download %}
-      <a href="{{ url_for('public_folder_zip', token=share.token) }}" class="btn btn-primary"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download all (zip)</a>
+      <a href="{{ url_for('public_folder_zip', token=share.token) }}" class="btn btn-primary"><svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> {% if lang == 'ar' %}تنزيل الكل (zip){% else %}Download all (zip){% endif %}</a>
     {% endif %}
   </div>
 
@@ -55,7 +55,7 @@
   {% if not files and not subfolders %}
     <div class="share-folder-empty">
       <div class="empty-ico"><svg class="ico" aria-hidden="true" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg></div>
-      <p>This folder is empty.</p>
+      <p>{% if lang == 'ar' %}هذا المجلد فارغ.{% else %}This folder is empty.{% endif %}</p>
     </div>
   {% else %}
     <ul class="share-folder-list">
@@ -90,7 +90,7 @@
     </ul>
   {% endif %}
 
-  <p class="alt share-folder-cta">Want your own cloud storage? <a href="{{ url_for('register') }}">Get started free →</a></p>
+  <p class="alt share-folder-cta">{% if lang == 'ar' %}هل تريد مساحة تخزينية خاصة بك؟ <a href="{{ url_for('register') }}">ابدأ مجاناً →</a>{% else %}Want your own cloud storage? <a href="{{ url_for('register') }}">Get started free →</a>{% endif %}</p>
 </div>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
 </body>

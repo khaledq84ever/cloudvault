@@ -14,7 +14,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-<title>Link expired — CloudVault</title>
+<title>{% if lang == 'ar' %}الرابط منتهي — CloudVault{% else %}Link expired — CloudVault{% endif %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap">
@@ -24,9 +24,9 @@
 <div class="share-wrap">
   <div class="share-card">
     <div class="share-ico"><svg class="ico" aria-hidden="true" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-    <h1>This link expired</h1>
-    <p class="muted">The owner removed this file or the share link has expired.</p>
-    <a href="/" class="btn btn-primary">Go home</a>
+    <h1>{% if lang == 'ar' %}انتهت صلاحية الرابط{% else %}This link expired{% endif %}</h1>
+    <p class="muted">{% if lang == 'ar' %}حذف المالك هذا الملف أو انتهت صلاحية الرابط.{% else %}The owner removed this file or the share link has expired.{% endif %}</p>
+    <a href="/" class="btn btn-primary">{% if lang == 'ar' %}العودة للرئيسية{% else %}Go home{% endif %}</a>
   </div>
 </div>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
