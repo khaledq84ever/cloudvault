@@ -16,10 +16,10 @@
 <body class="auth-page {{ 'rtl' if dir == 'rtl' else '' }}">
 <div class="auth-card" style="text-align:center;">
   <div style="margin-bottom:16px;"><svg class="ico" aria-hidden="true" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.3A7 7 0 0 0 5.1 11.5 5 5 0 0 0 6 21h12a4 4 0 0 0 0-8z"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-  <h1>You're offline</h1>
-  <p class="sub">CloudVault needs an internet connection to sync your files. Reconnect and we'll pick up right where you left off.</p>
-  <button class="btn btn-primary btn-block" onclick="location.reload()">Try again</button>
-  <p class="alt"><a href="/drive">Back to my drive</a></p>
+  <h1>{% if lang == 'ar' %}أنت غير متصل{% else %}You're offline{% endif %}</h1>
+  <p class="sub">{% if lang == 'ar' %}يحتاج CloudVault إلى اتصال بالإنترنت. أعد الاتصال وسنكمل من حيث توقفت.{% else %}CloudVault needs an internet connection to sync your files. Reconnect and we'll pick up right where you left off.{% endif %}</p>
+  <button class="btn btn-primary btn-block" onclick="location.reload()">{% if lang == 'ar' %}أعد المحاولة{% else %}Try again{% endif %}</button>
+  <p class="alt"><a href="/drive">{% if lang == 'ar' %}عودة لملفاتي{% else %}Back to my drive{% endif %}</a></p>
 </div>
 <script>
   window.addEventListener('online', () => location.reload());
