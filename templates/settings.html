@@ -23,7 +23,7 @@
 <body class="settings-body {{ 'rtl' if dir == 'rtl' else '' }}">
 {% include '_appnav.html' %}
 
-<div class="settings-page">
+<main class="settings-page">
   <div class="settings-bar">
     <h1>{% if lang == 'ar' %}الإعدادات{% else %}Settings{% endif %}</h1>
   </div>
@@ -66,7 +66,7 @@
       <a href="{{ url_for('logout') }}" class="btn btn-ghost danger">{% if lang == 'ar' %}تسجيل الخروج{% else %}Sign out{% endif %}</a>
     </div>
   </div>
-</div>
+</main>
 
 <div id="toast" class="toast" hidden></div>
 <script>

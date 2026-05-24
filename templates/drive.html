@@ -24,7 +24,7 @@
 
 {% include '_appnav.html' %}
 
-<div class="drive-grid">
+<main class="drive-grid">
 
 <aside class="sidebar">
   <a href="/" class="logo">
@@ -102,8 +102,8 @@
         <svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
         <span class="btn-camera-label">{% if lang == 'ar' %}كاميرا{% else %}Camera{% endif %}</span>
       </button>
-      <input type="file" id="fileInput" accept="*/*" multiple hidden>
-      <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" hidden>
+      <input type="file" id="fileInput" accept="*/*" multiple hidden aria-label="Upload files">
+      <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" hidden aria-label="Take photo or video">
 
     </div>
   </header>
@@ -228,7 +228,7 @@
       {% if lang == 'ar' %}رابط المشاركة{% else %}Share link{% endif %} <span class="dp-link-expiry" id="dpLinkExpiry"></span>
     </div>
     <div class="dp-link-row">
-      <input type="text" id="dpLinkInput" readonly>
+      <input type="text" id="dpLinkInput" readonly aria-label="Share link">
       <button class="btn btn-primary copy-link-btn" id="dpCopyLink" data-share-url="" title="Copy share link">{% if lang == 'ar' %}نسخ{% else %}Copy{% endif %}</button>
     </div>
     <div class="dp-link-label" style="margin-top: 14px;">
@@ -247,7 +247,7 @@
   </div>
 </aside>
 
-</div><!-- /.drive-grid -->
+</main><!-- /.drive-grid -->
 
 <!-- Bottom mobile nav -->
 <nav class="bottom-nav">

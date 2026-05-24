@@ -23,6 +23,7 @@
 <body class="landing {{ 'rtl' if dir == 'rtl' else '' }}">
 {% include '_appnav.html' %}
 
+<main id="content">
 <header class="hero hero-v2">
   <div class="hero-bg-orb o1"></div>
   <div class="hero-bg-orb o2"></div>
@@ -161,6 +162,7 @@
   </div>
 </section>
 
+</main>
 <footer class="foot">
   <p>{{ t.footer }} <a href="mailto:khaledq8tv@gmail.com">{{ t.footer_contact }}</a> · <a href="/set-lang/{{ 'en' if lang == 'ar' else 'ar' }}">{{ t.lang_toggle }}</a></p>
 </footer>

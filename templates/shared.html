@@ -23,7 +23,7 @@
 <body class="shared-body {{ 'rtl' if dir == 'rtl' else '' }}">
 {% include '_appnav.html' %}
 
-<div class="settings-page">
+<main class="settings-page">
   <div class="shares-head">
     <div>
       <h1>{% if lang == 'ar' %}سجل الرفع والروابط{% else %}Upload history & links{% endif %}</h1>
@@ -32,7 +32,7 @@
     <div class="shares-stats" id="sharesStats">—</div>
   </div>
   <div class="shares-list" id="list"><p class="muted">Loading…</p></div>
-</div>
+</main>
 
 <div id="toast" class="toast" hidden></div>
 <script>

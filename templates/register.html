@@ -21,7 +21,7 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
 </head>
 <body class="auth-page {{ 'rtl' if dir == 'rtl' else '' }}">
-<div class="auth-card">
+<main class="auth-card">
   <a href="/" class="logo center">
     <svg class="ico" aria-hidden="true" width="42" height="42" viewBox="0 0 24 24" fill="none">
       <defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c98a3e"/><stop offset="100%" stop-color="#e0a35a"/></linearGradient></defs>
@@ -54,7 +54,7 @@
     <button type="submit" class="btn btn-primary btn-block">{% if lang == 'ar' %}إنشاء حساب مجاني{% else %}Create free account{% endif %}</button>
   </form>
   <p class="alt">{% if lang == 'ar' %}لديك حساب بالفعل؟ <a href="{{ url_for('login') }}">سجّل دخولك</a>{% else %}Already have an account? <a href="{{ url_for('login') }}">Sign in</a>{% endif %}</p>
-</div>
+</main>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
 </body>
 </html>
