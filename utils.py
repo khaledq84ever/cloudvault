@@ -12,7 +12,13 @@ from flask import url_for
 from werkzeug.utils import secure_filename
 
 from models import db, File, Folder, Share, Tag, utcnow, file_tags
-from storage import get_storage
+from storage import get_storage as _get_storage_raw
+
+_storage_cache: dict[str, Any] = {}
+def _get_storage():
+    if "_instance" not in _storage_cache:
+        _storage_cache["_instance"] = _get_storage_raw(Path(flask.current_app.instance_path).parent)
+    return _storage_cache["_instance"]
 
 
 def used_bytes(user_id: int) -> int:
@@ -136,15 +142,18 @@ def _stream_zip_folder(folder: Folder):
 
 
 def _add_folder_to_zip(zf: zipfile.ZipFile, folder: Folder, prefix: str = ""):
-    storage = get_storage(Path(flask.current_app.instance_path).parent)
+    _st = _get_storage()
+    _do_add_folder(zf, folder, prefix, _st)
+
+def _do_add_folder(zf: zipfile.ZipFile, folder: Folder, prefix: str, _st) -> None:
     for f in File.query.filter_by(folder_id=folder.id, owner_id=folder.owner_id, trashed_at=None).all():
         try:
-            data = storage.get(folder.owner_id, f.storage_key)
+            data = _st.get(folder.owner_id, f.storage_key)
             zf.writestr(f"{prefix}/{f.name}", data)
         except Exception:
             continue
     for sub in Folder.query.filter_by(parent_id=folder.id, owner_id=folder.owner_id, trashed_at=None).all():
-        _add_folder_to_zip(zf, sub, prefix=f"{prefix}/{sub.name}")
+        _do_add_folder(zf, sub, f"{prefix}/{sub.name}", _st)
 
 
 def _folder_recursive_size(folder: Folder) -> int:
@@ -158,14 +167,14 @@ def _folder_recursive_size(folder: Folder) -> int:
 
 def _copy_file_to(file_obj: File, dest_folder_id: Optional[int]) -> File:
     import uuid
-    storage = get_storage(Path(flask.current_app.instance_path).parent)
+    _st = _get_storage()
     new_key = uuid.uuid4().hex
-    data = storage.get(file_obj.owner_id, file_obj.storage_key)
-    storage.put(file_obj.owner_id, new_key, data)
+    data = _st.get(file_obj.owner_id, file_obj.storage_key)
+    _st.put(file_obj.owner_id, new_key, data)
     if file_obj.has_thumb:
         try:
-            thumb_data = storage.get(file_obj.owner_id, f"_thumb/{file_obj.storage_key}.jpg")
-            storage.put(file_obj.owner_id, f"_thumb/{new_key}.jpg", thumb_data)
+            thumb_data = _st.get(file_obj.owner_id, f"_thumb/{file_obj.storage_key}.jpg")
+            _st.put(file_obj.owner_id, f"_thumb/{new_key}.jpg", thumb_data)
         except Exception:
             pass
     new_file = File(
