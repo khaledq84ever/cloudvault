@@ -1,4 +1,24 @@
 // CloudVault — pro drive (chunked uploads, thumbs, tags, SSE, mobile)
+const _AR = (window.CV_LANG === 'ar');
+const UI = _AR ? {
+  myDrive: 'ملفاتي', myDriveRoot: 'ملفاتي (الجذر)',
+  moveTo: 'نقل إلى…', copyTo: 'نسخ إلى…', moveHere: 'نقل هنا', copyHere: 'نسخ هنا',
+  trashConfirm: 'نقل إلى المهملات؟',
+  movedToTrash: 'نُقل إلى المهملات', restored: 'تمت الاستعادة', renamed: 'تمت إعادة التسمية',
+  starred: 'مميّز', unstarred: 'إلغاء التمييز', moved: 'تم النقل', trashEmptied: 'تم إفراغ المهملات',
+  deleted: 'تم الحذف', linkCopied: 'تم نسخ الرابط', failedCopy: 'فشل نسخ الرابط',
+  uploading: 'جارٍ الرفع', uploadDone: 'اكتمل الرفع', uploadFailed: 'فشل الرفع',
+  uploadPaused: 'الرفع متوقف مؤقتاً',
+} : {
+  myDrive: 'My Drive', myDriveRoot: 'My Drive (root)',
+  moveTo: 'Move to…', copyTo: 'Copy to…', moveHere: 'Move here', copyHere: 'Copy here',
+  trashConfirm: 'Move to trash?',
+  movedToTrash: 'Moved to trash', restored: 'Restored', renamed: 'Renamed',
+  starred: 'Starred', unstarred: 'Unstarred', moved: 'Moved', trashEmptied: 'Trash emptied',
+  deleted: 'Deleted', linkCopied: 'Link copied', failedCopy: 'Failed to copy link',
+  uploading: 'Uploading', uploadDone: 'Upload finished', uploadFailed: 'Upload failed',
+  uploadPaused: 'Upload paused',
+};
 const state = {
   view: 'my', folder: null, tagId: null,
   search: '', sort: 'date', order: 'desc',
@@ -217,13 +237,20 @@ async function loadList() {
   }
 }
 
-const VIEW_TITLES = {
-  my: ['My Drive', 'Everything you own.'],
-  recent: ['Recent', 'Files you opened or edited lately.'],
-  starred: ['Starred', 'Items you marked for quick access.'],
-  shared: ['Shared by me', 'Files you’ve given out via a link.'],
-  trash: ['Trash', 'Items here are deleted after 30 days.'],
-  tag: ['Tagged', 'Items matching the selected tag.'],
+const VIEW_TITLES = _AR ? {
+  my: [‘ملفاتي’, ‘جميع ملفاتك.’],
+  recent: [‘الأحدث’, ‘الملفات التي فتحتها أو عدّلتها مؤخراً.’],
+  starred: [‘المميزة’, ‘العناصر التي علّمتها للوصول السريع.’],
+  shared: [‘مشاركاتي’, ‘الملفات التي شاركتها عبر رابط.’],
+  trash: [‘المهملات’, ‘تُحذف العناصر هنا بعد 30 يوماً.’],
+  tag: [‘بالتصنيف’, ‘العناصر المطابقة للتصنيف المحدد.’],
+} : {
+  my: [‘My Drive’, ‘Everything you own.’],
+  recent: [‘Recent’, ‘Files you opened or edited lately.’],
+  starred: [‘Starred’, ‘Items you marked for quick access.’],
+  shared: [‘Shared by me’, ‘Files you\’ve given out via a link.’],
+  trash: [‘Trash’, ‘Items here are deleted after 30 days.’],
+  tag: [‘Tagged’, ‘Items matching the selected tag.’],
 };
 function renderPageTitle(crumb) {
   const titleEl = document.getElementById('pageTitle');
@@ -459,9 +486,9 @@ function wireSwipe(row, item) {
       row.style.transform = 'translateX(-100px)';
       row.classList.add('swiped');
       setTimeout(() => {
-        if (row.classList.contains('swiped') && confirm('Move to trash?')) {
+        if (row.classList.contains('swiped') && confirm(UI.trashConfirm)) {
           api(`/api/${item._type === 'file' ? 'files' : 'folders'}/${item.id}`, { method:'DELETE' })
-            .then(() => { toast('Moved to trash', 'success'); loadList(); loadMe(); });
+            .then(() => { toast(UI.movedToTrash, 'success'); loadList(); loadMe(); });
         }
         row.style.transform = ''; row.classList.remove('swiped');
       }, 1500);
@@ -483,7 +510,7 @@ function pickItem(item) {
 
 function renderBreadcrumb(crumbs) {
   const wrap = $('#breadcrumb');
-  wrap.innerHTML = `<span class="crumb root" data-folder="">My Drive</span>`;
+  wrap.innerHTML = `<span class="crumb root" data-folder="">${UI.myDrive}</span>`;
   for (const c of crumbs) {
     wrap.insertAdjacentHTML('beforeend', `<span class="crumb-sep">›</span><span class="crumb" data-folder="${c.id}">${escapeHtml(c.name)}</span>`);
   }
@@ -624,13 +651,13 @@ $('#ctxMenu').addEventListener('click', async (e) => {
   } else if (act === 'share') openShare(id, type);
   else if (act === 'star' && type === 'file') {
     await api(`/api/files/${id}`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ starred: !item.starred }) });
-    toast(item.starred ? 'Unstarred' : 'Starred', 'success'); loadList();
+    toast(item.starred ? UI.unstarred : UI.starred, 'success'); loadList();
   } else if (act === 'rename') {
     const name = prompt('New name:', item.name);
     if (name && name !== item.name) {
       const url = type === 'file' ? `/api/files/${id}` : `/api/folders/${id}`;
       await api(url, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
-      toast('Renamed', 'success'); loadList();
+      toast(UI.renamed, 'success'); loadList();
     }
   } else if (act === 'move') {
     state.selected.clear(); state.selected.add(`${type}:${id}`); openMoveDialog('move');
@@ -639,7 +666,7 @@ $('#ctxMenu').addEventListener('click', async (e) => {
   } else if (act === 'restore') {
     const url = type === 'file' ? `/api/files/${id}/restore` : `/api/folders/${id}/restore`;
     await api(url, { method:'POST' });
-    toast('Restored', 'success'); loadList(); loadMe();
+    toast(UI.restored, 'success'); loadList(); loadMe();
   } else if (act === 'delete') {
     if (state.view === 'trash') {
       if (!confirm('Delete forever?')) return;
@@ -649,7 +676,7 @@ $('#ctxMenu').addEventListener('click', async (e) => {
       const url = type === 'file' ? `/api/files/${id}` : `/api/folders/${id}`;
       await api(url, { method:'DELETE' });
     }
-    toast(state.view === 'trash' ? 'Deleted' : 'Moved to trash', 'success');
+    toast(state.view === 'trash' ? UI.deleted : UI.movedToTrash, 'success');
     closeDetails(); loadList(); loadMe();
   }
 });
@@ -699,14 +726,14 @@ function openDetails(item) {
     const name = prompt('New name:', item.name);
     if (!name || name === item.name) return;
     const url = item._type === 'file' ? `/api/files/${item.id}` : `/api/folders/${item.id}`;
-    api(url, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) }).then(() => { toast('Renamed', 'success'); loadList(); });
+    api(url, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) }).then(() => { toast(UI.renamed, 'success'); loadList(); });
   };
   $('#dpMove').onclick = () => {
     state.selected.clear(); state.selected.add(`${item._type}:${item.id}`); openMoveDialog();
   };
   $('#dpDelete').onclick = () => {
     const url = item._type === 'file' ? `/api/files/${item.id}` : `/api/folders/${item.id}`;
-    api(url, { method:'DELETE' }).then(() => { toast('Moved to trash', 'success'); closeDetails(); loadList(); loadMe(); });
+    api(url, { method:'DELETE' }).then(() => { toast(UI.movedToTrash, 'success'); closeDetails(); loadList(); loadMe(); });
   };
   renderTagsForFile(item);
 }
@@ -748,12 +775,12 @@ async function openMoveDialog(mode='move') {
   state.moveMode = mode;
   const titleEl = document.getElementById('moveModalTitle');
   const ctaEl = $('#moveConfirm');
-  if (titleEl) titleEl.textContent = mode === 'copy' ? 'Copy to…' : 'Move to…';
-  if (ctaEl) ctaEl.textContent = mode === 'copy' ? 'Copy here' : 'Move here';
+  if (titleEl) titleEl.textContent = mode === 'copy' ? UI.copyTo : UI.moveTo;
+  if (ctaEl) ctaEl.textContent = mode === 'copy' ? UI.copyHere : UI.moveHere;
   const tree = await api('/api/folders/tree');
   const wrap = $('#folderTree');
     const folderIco = S('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>');
-  wrap.innerHTML = `<div class="tree-node" data-id=""><span>${folderIco} My Drive (root)</span></div>` +
+  wrap.innerHTML = `<div class="tree-node" data-id=""><span>${folderIco} ${UI.myDriveRoot}</span></div>` +
     tree.map(f => `<div class="tree-node" data-id="${f.id}"><span>${folderIco} ${escapeHtml(f.path)}</span></div>`).join('');
   state.moveTarget = null;
   ctaEl.disabled = true;
@@ -785,7 +812,7 @@ async function bulkMove(targetFolder) {
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ action:'move', file_ids: fileIds, folder_ids: folderIds, target_folder: targetFolder })
   });
-  toast('Moved', 'success'); loadList();
+  toast(UI.moved, 'success'); loadList();
 }
 async function bulkCopy(targetFolder) {
   const { fileIds, folderIds } = _selectedIds();
@@ -881,7 +908,7 @@ $('#shareClose').onclick = () => $('#shareModal').hidden = true;
 $('#copyBtn').onclick = () => {
   $('#shareUrl').select();
   navigator.clipboard.writeText($('#shareUrl').value);
-  toast('Link copied', 'success');
+  toast(UI.linkCopied, 'success');
 };
 $('#shareExpiry').onchange = regenShare;
 $('#shareAllowDownload').onchange = regenShare;
@@ -1009,7 +1036,7 @@ async function uploadFiles(files, folderId=null) {
   $('#uploadBar').hidden = false;
   const pendingList = loadPending();
   for (const f of files) {
-    $('#uploadText').textContent = `Uploading ${f.name} (${done+1}/${files.length})`;
+    $('#uploadText').textContent = `${UI.uploading} ${f.name} (${done+1}/${files.length})`;
     $('#uploadFill').style.width = '0';
     resetUploadStats();
     try {
@@ -1046,7 +1073,7 @@ async function uploadFiles(files, folderId=null) {
   resetUploadStats();
   $('#fileInput').value = '';
   if (results.length >= 1) showPostUploadBanner(results);
-  else toast(`Upload finished (${done})`, 'success');
+  else toast(`${UI.uploadDone} (${done})`, 'success');
   // Force "newest first" after every upload so the new file is unmissable,
   // even if the user (or stale cache) had a different sort selected.
   state.sort = 'date'; state.order = 'desc';
@@ -1289,7 +1316,7 @@ function renderResumeBanner() {
     return `
       <div class="resume-row" data-id="${e.upload_id}">
         <div class="resume-info">
-          <strong>Upload paused</strong>
+          <strong>${_AR ? "الرفع متوقف مؤقتاً" : "Upload paused"}</strong>
           <span>${escapeHtml(e.filename)} · ${mb} MB · ${pct}% done</span>
         </div>
         <div class="resume-actions">
@@ -1361,7 +1388,7 @@ $('#btnNew').onclick = () => {
 $('#emptyTrash').onclick = async () => {
   if (!confirm('Permanently delete everything in trash?')) return;
   await api('/api/trash/empty', { method:'POST' });
-  toast('Trash emptied', 'success'); loadList(); loadMe();
+  toast(UI.trashEmptied, 'success'); loadList(); loadMe();
 };
 
 // ---------- Search ----------
@@ -1451,7 +1478,7 @@ document.addEventListener('click', async (e) => {
     setTimeout(() => btn.classList.remove('copied'), 1200);
     toast('Public link copied — anyone with the link can view for 7 days', 'success');
   } catch (err) {
-    toast('Failed to copy link', 'error');
+    toast(UI.failedCopy, 'error');
   }
 });
 
