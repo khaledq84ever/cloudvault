@@ -14,56 +14,56 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-<title>Settings — CloudVault</title>
+<title>{% if lang == 'ar' %}الإعدادات — CloudVault{% else %}Settings — CloudVault{% endif %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
 </head>
-<body class="{{ 'rtl' if dir == 'rtl' else '' }}">
+<body class="settings-body {{ 'rtl' if dir == 'rtl' else '' }}">
 {% include '_appnav.html' %}
 
 <div class="settings-page">
   <div class="settings-bar">
-    <h1>Settings</h1>
+    <h1>{% if lang == 'ar' %}الإعدادات{% else %}Settings{% endif %}</h1>
   </div>
 
   <div class="settings-card">
-    <h2>Account</h2>
-    <p class="muted">Update your profile information</p>
-    <label>Email</label>
+    <h2>{% if lang == 'ar' %}الحساب{% else %}Account{% endif %}</h2>
+    <p class="muted">{% if lang == 'ar' %}تحديث معلومات ملفك الشخصي{% else %}Update your profile information{% endif %}</p>
+    <label>{% if lang == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}</label>
     <input type="email" value="{{ user.email }}" disabled>
-    <label for="nameInput">Display name</label>
-    <input type="text" id="nameInput" value="{{ user.name }}">
+    <label for="nameInput">{% if lang == 'ar' %}الاسم المعروض{% else %}Display name{% endif %}</label>
+    <input type="text" id="nameInput" value="{{ user.name }}" placeholder="{% if lang == 'ar' %}اسمك{% else %}Your name{% endif %}">
     <div class="row">
-      <button class="btn btn-primary" id="saveName">Save changes</button>
+      <button class="btn btn-primary" id="saveName">{% if lang == 'ar' %}حفظ التغييرات{% else %}Save changes{% endif %}</button>
     </div>
   </div>
 
   <div class="settings-card">
-    <h2>Storage</h2>
-    <p class="muted">Your CloudVault usage</p>
+    <h2>{% if lang == 'ar' %}التخزين{% else %}Storage{% endif %}</h2>
+    <p class="muted">{% if lang == 'ar' %}استخدامك في CloudVault{% else %}Your CloudVault usage{% endif %}</p>
     <div class="bar" style="margin: 14px 0;"><div class="bar-fill" id="barFill"></div></div>
     <div class="storage-text" id="storageText" style="font-size: 14px;">— / —</div>
   </div>
 
   <div class="settings-card">
-    <h2>Change password</h2>
-    <p class="muted">Use 6+ characters</p>
-    <label for="curPw">Current password</label>
-    <input type="password" id="curPw">
-    <label for="newPw">New password</label>
-    <input type="password" id="newPw">
+    <h2>{% if lang == 'ar' %}تغيير كلمة المرور{% else %}Change password{% endif %}</h2>
+    <p class="muted">{% if lang == 'ar' %}6 أحرف على الأقل{% else %}Use 6+ characters{% endif %}</p>
+    <label for="curPw">{% if lang == 'ar' %}كلمة المرور الحالية{% else %}Current password{% endif %}</label>
+    <input type="password" id="curPw" placeholder="••••••••">
+    <label for="newPw">{% if lang == 'ar' %}كلمة المرور الجديدة{% else %}New password{% endif %}</label>
+    <input type="password" id="newPw" placeholder="••••••••">
     <div class="row">
-      <button class="btn btn-primary" id="savePw">Update password</button>
+      <button class="btn btn-primary" id="savePw">{% if lang == 'ar' %}تحديث كلمة المرور{% else %}Update password{% endif %}</button>
     </div>
   </div>
 
   <div class="settings-card danger-zone">
-    <h2>Danger zone</h2>
-    <p class="muted">Sign out from this device</p>
+    <h2>{% if lang == 'ar' %}منطقة الخطر{% else %}Danger zone{% endif %}</h2>
+    <p class="muted">{% if lang == 'ar' %}تسجيل الخروج من هذا الجهاز{% else %}Sign out from this device{% endif %}</p>
     <div class="row">
-      <a href="{{ url_for('logout') }}" class="btn btn-ghost danger">Sign out</a>
+      <a href="{{ url_for('logout') }}" class="btn btn-ghost danger">{% if lang == 'ar' %}تسجيل الخروج{% else %}Sign out{% endif %}</a>
     </div>
   </div>
 </div>

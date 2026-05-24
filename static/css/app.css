@@ -3022,3 +3022,77 @@ body.rtl .auth-trust { flex-direction: row-reverse; }
 .search-clear:hover { color: var(--text); background: rgba(255,255,255,.06); }
 body.rtl .search-bar { flex-direction: row-reverse; }
 body.rtl .search-bar input { text-align: right; }
+
+/* ==========================================================================
+   v20 — RTL drive polish + settings body + page improvements
+   ========================================================================== */
+
+/* RTL: breadcrumb ordering + toolbar */
+body.rtl .breadcrumb { direction: rtl; }
+body.rtl .toolbar { flex-direction: row-reverse; }
+body.rtl .toolbar-right { flex-direction: row-reverse; }
+body.rtl .top-actions { flex-direction: row-reverse; }
+
+/* RTL: sidebar sign-out link */
+body.rtl .uc-actions { text-align: right; }
+body.rtl .side-link { flex-direction: row-reverse; text-align: right; }
+body.rtl .side-link .ico { margin-left: 10px; margin-right: 0; }
+
+/* RTL: action bar */
+body.rtl .action-bar { flex-direction: row-reverse; }
+
+/* Settings body background */
+.settings-body {
+  background: var(--bg);
+  min-height: 100dvh;
+}
+
+/* Settings page visual upgrade */
+.settings-page h1 {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  background: linear-gradient(135deg, #f5f1ea, #d6d0c4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding: 8px 0 4px;
+}
+
+/* RTL: settings */
+body.rtl .settings-card { text-align: right; }
+body.rtl .settings-card .row { flex-direction: row-reverse; }
+
+/* Drive page background */
+.drive-page {
+  background: var(--bg);
+  min-height: 100dvh;
+}
+
+/* Sort select RTL */
+body.rtl .select { direction: rtl; }
+
+/* Tags section RTL */
+body.rtl .tags-section { text-align: right; }
+body.rtl .tags-label { text-align: right; }
+
+/* Action sheet RTL */
+body.rtl .action-item { flex-direction: row-reverse; text-align: right; }
+body.rtl .action-label { text-align: right; }
+
+/* Bottom nav - make it flush on safe-area-aware devices */
+.bottom-nav {
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+/* Mobile: search bar full width */
+@media (max-width: 640px) {
+  .search-bar-wrap { padding: 4px 0 10px; }
+  .search-bar input { font-size: 16px; }
+}
+
+/* Shared body background */
+.shared-body {
+  background: var(--bg);
+  min-height: 100dvh;
+}

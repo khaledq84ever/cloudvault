@@ -14,7 +14,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-<title>My Drive — CloudVault</title>
+<title>{% if lang == 'ar' %}ملفاتي — CloudVault{% else %}My Drive — CloudVault{% endif %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap">
@@ -33,31 +33,31 @@
   </a>
   <button class="btn btn-primary btn-block btn-new" id="btnNew">
     <svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-    New
+    {% if lang == 'ar' %}جديد{% else %}New{% endif %}
   </button>
   <nav class="side-nav">
     <a class="side-link active" data-view="my">
       <svg class="ico" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-7l-3-3H4a1 1 0 0 0-1 1z"/></svg>
-      My Drive
+      {% if lang == 'ar' %}ملفاتي{% else %}My Drive{% endif %}
     </a>
     <a class="side-link" data-view="recent">
       <svg class="ico" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-      Recent
+      {% if lang == 'ar' %}الأحدث{% else %}Recent{% endif %}
     </a>
     <a class="side-link" data-view="starred">
       <svg class="ico" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.3 17 14 18.5 21 12 17.3 5.5 21 7 14 2 9.3 9 9 12 2"/></svg>
-      Starred
+      {% if lang == 'ar' %}المميزة{% else %}Starred{% endif %}
     </a>
     <a class="side-link" data-view="shared">
       <svg class="ico" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
-      Shared by me
+      {% if lang == 'ar' %}مشاركاتي{% else %}Shared by me{% endif %}
     </a>
     <a class="side-link" data-view="trash">
       <svg class="ico" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-      Trash
+      {% if lang == 'ar' %}المهملات{% else %}Trash{% endif %}
     </a>
     <div class="tags-section">
-      <div class="tags-label">TAGS</div>
+      <div class="tags-label">{% if lang == 'ar' %}التصنيفات{% else %}TAGS{% endif %}</div>
       <div id="tagsList"></div>
     </div>
   </nav>
@@ -73,7 +73,7 @@
     <div class="bar"><div class="bar-fill" id="barFill"></div></div>
     <div class="uc-storage" id="storageText">— / —</div>
     <div class="uc-actions">
-      <a href="{{ url_for('logout') }}" title="Sign out"><svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> Sign out</a>
+      <a href="{{ url_for('logout') }}" title="Sign out"><svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg> {% if lang == 'ar' %}خروج{% else %}Sign out{% endif %}</a>
     </div>
   </div>
 </aside>
@@ -92,15 +92,15 @@
       </button>
       <button class="btn btn-ghost" id="btnNewFolder">
         <svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-7l-3-3H4a1 1 0 0 0-1 1z"/><path d="M12 11v6M9 14h6"/></svg>
-        New folder
+        {% if lang == 'ar' %}مجلد جديد{% else %}New folder{% endif %}
       </button>
       <button class="btn btn-primary" id="btnUpload">
         <svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M5 11l7-7 7 7"/><path d="M5 20h14"/></svg>
-        Upload
+        {% if lang == 'ar' %}رفع{% else %}Upload{% endif %}
       </button>
       <button class="btn btn-ghost btn-camera" id="btnCamera" aria-label="Take photo and upload">
         <svg class="ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-        <span class="btn-camera-label">Camera</span>
+        <span class="btn-camera-label">{% if lang == 'ar' %}كاميرا{% else %}Camera{% endif %}</span>
       </button>
       <input type="file" id="fileInput" accept="*/*" multiple hidden>
       <input type="file" id="cameraInput" accept="image/*,video/*" capture="environment" hidden>
@@ -116,7 +116,7 @@
   <div class="search-bar-wrap">
     <div class="search-bar">
       <svg class="ico search-ico" aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="search" id="searchInput" placeholder="Search files and folders…" autocomplete="off" spellcheck="false" aria-label="Search">
+      <input type="search" id="searchInput" placeholder="{% if lang == 'ar' %}ابحث في الملفات والمجلدات…{% else %}Search files and folders…{% endif %}" autocomplete="off" spellcheck="false" aria-label="Search">
       <button class="search-clear" id="searchClear" hidden aria-label="Clear search">
         <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -147,31 +147,31 @@
     <div class="sep"></div>
     <button class="btn btn-ghost" data-bulk="download">
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12"/><path d="M7 11l5 5 5-5"/><path d="M5 20h14"/></svg>
-      Download
+      {% if lang == 'ar' %}تنزيل{% else %}Download{% endif %}
     </button>
     <button class="btn btn-ghost" data-bulk="move">
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-7l-3-3H4a1 1 0 0 0-1 1z"/><path d="M9 13l3-3 3 3"/><path d="M12 10v6"/></svg>
-      Move
+      {% if lang == 'ar' %}نقل{% else %}Move{% endif %}
     </button>
     <button class="btn btn-ghost" data-bulk="copy">
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      Copy
+      {% if lang == 'ar' %}نسخ{% else %}Copy{% endif %}
     </button>
     <button class="btn btn-ghost" data-bulk="star">
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.3 17 14 18.5 21 12 17.3 5.5 21 7 14 2 9.3 9 9 12 2"/></svg>
-      Star
+      {% if lang == 'ar' %}تمييز{% else %}Star{% endif %}
     </button>
     <button class="btn btn-ghost" data-bulk="restore" id="bulkRestore" hidden>
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-15-6.7L3 13"/></svg>
-      Restore
+      {% if lang == 'ar' %}استعادة{% else %}Restore{% endif %}
     </button>
     <button class="btn btn-ghost danger" data-bulk="trash">
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-      Trash
+      {% if lang == 'ar' %}حذف{% else %}Trash{% endif %}
     </button>
     <button class="btn btn-ghost danger" data-bulk="delete" id="bulkDelete" hidden>
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="9" y1="10" x2="15" y2="16"/><line x1="15" y1="10" x2="9" y2="16"/></svg>
-      Delete forever
+      {% if lang == 'ar' %}حذف نهائي{% else %}Delete forever{% endif %}
     </button>
     <button class="icon-btn" id="clearSel" title="Clear selection" aria-label="Clear selection">
       <svg class="ico" aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -180,8 +180,8 @@
 
   <!-- Trash banner -->
   <div class="trash-banner" id="trashBanner" hidden>
-    <span>Items in trash are deleted permanently after 30 days.</span>
-    <button class="btn btn-ghost danger" id="emptyTrash">Empty trash</button>
+    <span>{% if lang == 'ar' %}تُحذف العناصر في المهملات نهائياً بعد 30 يوماً.{% else %}Items in trash are deleted permanently after 30 days.{% endif %}</span>
+    <button class="btn btn-ghost danger" id="emptyTrash">{% if lang == 'ar' %}إفراغ المهملات{% else %}Empty trash{% endif %}</button>
   </div>
 
   <div class="drop-zone" id="dropZone">
@@ -198,8 +198,8 @@
     <div id="grid" class="grid view-list"></div>
     <button class="empty" id="empty" type="button" hidden>
       <div class="empty-ico"><svg class="ico" aria-hidden="true" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg></div>
-      <h3>Nothing here yet</h3>
-      <p>Tap here to upload your first file, or drop files anywhere on this page.</p>
+      <h3>{% if lang == 'ar' %}لا يوجد شيء هنا بعد{% else %}Nothing here yet{% endif %}</h3>
+      <p>{% if lang == 'ar' %}اضغط هنا لرفع أول ملف، أو أسقط الملفات في أي مكان{% else %}Tap here to upload your first file, or drop files anywhere on this page.{% endif %}</p>
     </button>
     <div class="drop-overlay" id="dropOverlay">
       <div class="drop-msg"><svg class="ico" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M5 11l7-7 7 7"/><path d="M5 20h14"/></svg> Drop to upload</div>
@@ -253,22 +253,22 @@
 <nav class="bottom-nav">
   <a class="bn-link active" data-view="my">
     <svg aria-hidden="true" class="bn-ico ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v13a1 1 0 0 0 1 1h16a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-7l-3-3H4a1 1 0 0 0-1 1z"/></svg>
-    <span>Files</span>
+    <span>{% if lang == 'ar' %}ملفاتي{% else %}Files{% endif %}</span>
   </a>
   <a class="bn-link" data-view="recent">
     <svg aria-hidden="true" class="bn-ico ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-    <span>Recent</span>
+    <span>{% if lang == 'ar' %}الأحدث{% else %}Recent{% endif %}</span>
   </a>
   <a class="bn-link bn-up" id="bnUpload" role="button" aria-haspopup="dialog" aria-label="Add">
     <svg aria-hidden="true" class="bn-ico bn-ico-plus ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
   </a>
   <a class="bn-link" data-view="starred">
     <svg aria-hidden="true" class="bn-ico ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15 9 22 9.3 17 14 18.5 21 12 17.3 5.5 21 7 14 2 9.3 9 9 12 2"/></svg>
-    <span>Starred</span>
+    <span>{% if lang == 'ar' %}المميزة{% else %}Starred{% endif %}</span>
   </a>
   <a class="bn-link" data-view="trash">
     <svg aria-hidden="true" class="bn-ico ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-    <span>Trash</span>
+    <span>{% if lang == 'ar' %}المهملات{% else %}Trash{% endif %}</span>
   </a>
 </nav>
 
@@ -280,22 +280,22 @@
     <button type="button" class="action-item" id="asUpload">
       <span class="action-icon"><svg class="ico" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
       <span class="action-label">
-        <strong>Upload files</strong>
-        <small>Pick photos, videos, or any file</small>
+        <strong>{% if lang == 'ar' %}رفع الملفات{% else %}Upload files{% endif %}</strong>
+        <small>{% if lang == 'ar' %}اختر صوراً أو فيديوهات أو أي ملف{% else %}Pick photos, videos, or any file{% endif %}</small>
       </span>
     </button>
     <button type="button" class="action-item" id="asCamera">
       <span class="action-icon"><svg class="ico" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
       <span class="action-label">
-        <strong>Take photo or video</strong>
-        <small>Capture and upload from your camera</small>
+        <strong>{% if lang == 'ar' %}التقاط صورة أو فيديو{% else %}Take photo or video{% endif %}</strong>
+        <small>{% if lang == 'ar' %}التقط ورفع من الكاميرا{% else %}Capture and upload from your camera{% endif %}</small>
       </span>
     </button>
     <button type="button" class="action-item" id="asNewFolder">
       <span class="action-icon"><svg class="ico" aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg></span>
       <span class="action-label">
-        <strong>New folder</strong>
-        <small>Organise files into a folder</small>
+        <strong>{% if lang == 'ar' %}مجلد جديد{% else %}New folder{% endif %}</strong>
+        <small>{% if lang == 'ar' %}نظّم ملفاتك في مجلدات{% else %}Organise files into a folder{% endif %}</small>
       </span>
     </button>
     <div class="action-divider" aria-hidden="true"></div>
@@ -304,8 +304,8 @@
         <svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
       </span>
       <span class="action-label">
-        <strong>Shared by me</strong>
-        <small>Links you’ve given out</small>
+        <strong>{% if lang == 'ar' %}مشاركاتي{% else %}Shared by me{% endif %}</strong>
+        <small>{% if lang == 'ar' %}الروابط التي شاركتها{% else %}Links you've given out{% endif %}</small>
       </span>
     </a>
     <a class="action-item" href="{{ url_for('settings_page') }}" id="asSettings">
@@ -313,8 +313,8 @@
         <svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
       </span>
       <span class="action-label">
-        <strong>Settings</strong>
-        <small>Account, password, plan</small>
+        <strong>{% if lang == 'ar' %}الإعدادات{% else %}Settings{% endif %}</strong>
+        <small>{% if lang == 'ar' %}الحساب وكلمة المرور{% else %}Account, password, plan{% endif %}</small>
       </span>
     </a>
     <a class="action-item action-item-danger" href="{{ url_for('logout') }}">
@@ -322,11 +322,11 @@
         <svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       </span>
       <span class="action-label">
-        <strong>Sign out</strong>
-        <small>End this session</small>
+        <strong>{% if lang == 'ar' %}تسجيل الخروج{% else %}Sign out{% endif %}</strong>
+        <small>{% if lang == 'ar' %}إنهاء هذه الجلسة{% else %}End this session{% endif %}</small>
       </span>
     </a>
-    <button type="button" class="action-item" id="asCancel">Cancel</button>
+    <button type="button" class="action-item" id="asCancel">{% if lang == 'ar' %}إلغاء{% else %}Cancel{% endif %}</button>
   </div>
 </div>
 

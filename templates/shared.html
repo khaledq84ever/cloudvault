@@ -14,20 +14,20 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-<title>Shared by me — CloudVault</title>
+<title>{% if lang == 'ar' %}مشاركاتي — CloudVault{% else %}Shared by me — CloudVault{% endif %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
 </head>
-<body class="{{ 'rtl' if dir == 'rtl' else '' }}">
+<body class="shared-body {{ 'rtl' if dir == 'rtl' else '' }}">
 {% include '_appnav.html' %}
 
 <div class="settings-page">
   <div class="shares-head">
     <div>
-      <h1>Upload history & links</h1>
-      <p class="muted">Every file you upload gets a public link valid for 7 days. Manage them here.</p>
+      <h1>{% if lang == 'ar' %}سجل الرفع والروابط{% else %}Upload history & links{% endif %}</h1>
+      <p class="muted">{% if lang == 'ar' %}كل ملف ترفعه يحصل على رابط عام. تحكم في روابطك من هنا.{% else %}Every file you upload gets a public link valid for 7 days. Manage them here.{% endif %}</p>
     </div>
     <div class="shares-stats" id="sharesStats">—</div>
   </div>
