@@ -23,6 +23,7 @@ from flask_login import (
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_sock import Sock
+from flask_compress import Compress
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -55,6 +56,13 @@ VPS_ROOT.mkdir(exist_ok=True, parents=True)
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 app.config["PREFERRED_URL_SCHEME"] = "https"
+
+# Brotli + gzip on all text responses (HTML, CSS, JS, JSON, SVG).
+# Cuts 125 KB CSS → ~22 KB over the wire — biggest single perf lever left.
+app.config["COMPRESS_ALGORITHM"] = ["br", "gzip"]
+app.config["COMPRESS_MIN_SIZE"] = 1024
+app.config["COMPRESS_LEVEL"] = 6
+Compress(app)
 
 _CACHE_BUST = secrets.token_hex(4)
 
@@ -236,6 +244,44 @@ def favicon() -> Response:
 @app.route("/offline")
 def offline() -> str:
     return render_template("offline.html")
+
+
+@app.route("/robots.txt")
+def robots_txt() -> Response:
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /api/\n"
+        "Disallow: /drive\n"
+        "Disallow: /settings\n"
+        "Disallow: /shared\n"
+        "Disallow: /vps\n"
+        "Disallow: /reset/\n"
+        "Disallow: /s/\n"
+        f"Sitemap: {request.url_root}sitemap.xml\n"
+    )
+    resp = Response(body, mimetype="text/plain")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml() -> Response:
+    base = request.url_root.rstrip("/")
+    pages = ["/", "/login", "/register", "/forgot"]
+    items = "\n".join(
+        f"  <url><loc>{base}{p}</loc><changefreq>weekly</changefreq></url>"
+        for p in pages
+    )
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f"{items}\n"
+        "</urlset>\n"
+    )
+    resp = Response(body, mimetype="application/xml")
+    resp.headers["Cache-Control"] = "public, max-age=86400"
+    return resp
 
 
 # ---------------- Auth routes ----------------
@@ -515,7 +561,7 @@ def api_rename_folder(folder_id: int) -> Response:
         new_parent = data["parent_id"]
         if new_parent is not None:
             new_parent = int(new_parent)
-            if new_parent == folder.id or _folder_is_descendant_of_id(folder.id, new_parent, current_user.id):
+            if new_parent == folder.id or _folder_is_descendant_of_id(folder.id, new_parent):
                 return jsonify({"error": "Cannot move a folder into itself or a subfolder"}), 422
         folder.parent_id = new_parent
     db.session.commit()
@@ -548,6 +594,8 @@ def api_trash_folder(folder_id: int) -> Response:
 def api_restore_folder(folder_id: int) -> Response:
     folder = Folder.query.filter_by(id=folder_id, owner_id=current_user.id).first_or_404()
     folder.trashed_at = None
+    for f in File.query.filter_by(folder_id=folder_id, owner_id=current_user.id, trashed_at=True).all():
+        f.trashed_at = None
     db.session.commit()
     emit(current_user.id, "folder_updated", folder_to_dict(folder))
     return jsonify(folder_to_dict(folder))
@@ -628,8 +676,9 @@ def api_upload() -> Response:
         storage.put(current_user.id, f"_thumb/{storage_key}.jpg", thumb_data)
         has_thumb = True
 
+    safe_name = secure_filename(f.filename) or f"untitled_{uuid.uuid4().hex[:8]}"
     record = File(
-        name=secure_filename(f.filename) or f.filename,
+        name=safe_name,
         storage_key=storage_key,
         mime=mime, size=size,
         owner_id=current_user.id, folder_id=folder_id,
@@ -649,7 +698,10 @@ def api_upload() -> Response:
 def api_upload_init() -> Response:
     data = request.get_json(silent=True) or {}
     filename = data.get("filename")
-    size = int(data.get("size", 0))
+    try:
+        size = int(data.get("size", 0))
+    except (ValueError, TypeError):
+        return jsonify({"error": "size must be an integer"}), 400
     import mimetypes
     mime = data.get("mime") or mimetypes.guess_type(filename or "")[0] or "application/octet-stream"
     folder_id = data.get("folder_id")
@@ -735,9 +787,17 @@ def api_upload_patch(upload_id: str) -> Response:
     sess = UploadSession.query.filter_by(
         upload_id=upload_id, owner_id=current_user.id
     ).first_or_404()
-    offset = int(request.args.get("offset", 0))
+    offset_str = request.args.get("offset", "0")
+    try:
+        offset = int(offset_str)
+    except (ValueError, TypeError):
+        return jsonify({"error": "offset must be an integer"}), 400
+    if offset < 0 or offset > sess.size:
+        return jsonify({"error": "invalid offset"}), 400
     chunk = request.get_data()
     staging = TMP_UPLOAD_DIR / f"{current_user.id}_{upload_id}"
+    if not staging.exists():
+        staging.touch()
     with open(staging, "r+b") as f:
         f.seek(offset)
         f.write(chunk)
@@ -768,8 +828,9 @@ def api_upload_complete(upload_id: str) -> Response:
         storage.put(current_user.id, f"_thumb/{storage_key}.jpg", t)
         has_thumb = True
 
+    safe_name = secure_filename(sess.filename) or f"untitled_{uuid.uuid4().hex[:8]}"
     record = File(
-        name=secure_filename(sess.filename) or sess.filename,
+        name=safe_name,
         storage_key=storage_key, mime=sess.mime, size=sess.size,
         owner_id=current_user.id, folder_id=sess.folder_id,
         has_thumb=has_thumb,
@@ -898,6 +959,8 @@ def api_bulk() -> Response:
             f.trashed_at = None
         for fo in folders:
             fo.trashed_at = None
+            for f in File.query.filter_by(folder_id=fo.id, owner_id=current_user.id, trashed_at=True).all():
+                f.trashed_at = None
     elif action == "delete":
         for f in files:
             storage.delete(current_user.id, f.storage_key)
@@ -1044,10 +1107,14 @@ def api_my_shares() -> Response:
               .outerjoin(Folder, Share.folder_id == Folder.id)
               .filter((File.owner_id == current_user.id) | (Folder.owner_id == current_user.id))
               .order_by(Share.created_at.desc()).all())
+    file_ids = {s.file_id for s in shares if s.file_id}
+    folder_ids = {s.folder_id for s in shares if s.folder_id}
+    files_map = {f.id: f for f in File.query.filter(File.id.in_(file_ids)).all()} if file_ids else {}
+    folders_map = {fo.id: fo for fo in Folder.query.filter(Folder.id.in_(folder_ids)).all()} if folder_ids else {}
     out = []
     for s in shares:
         if s.file_id:
-            f = File.query.get(s.file_id)
+            f = files_map.get(s.file_id)
             if not f or f.trashed_at:
                 continue
             out.append({
@@ -1063,7 +1130,7 @@ def api_my_shares() -> Response:
                 "created_at": s.created_at.isoformat(),
             })
         elif s.folder_id:
-            fo = Folder.query.get(s.folder_id)
+            fo = folders_map.get(s.folder_id)
             if not fo or fo.trashed_at:
                 continue
             out.append({
@@ -1562,6 +1629,17 @@ def secure_headers(resp: Response) -> Response:
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
     resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    # HSTS: lock to HTTPS for a year + preload eligibility. Railway is always
+    # behind their HTTPS edge so we never serve plaintext anyway.
+    resp.headers.setdefault(
+        "Strict-Transport-Security",
+        "max-age=31536000; includeSubDomains; preload",
+    )
+    # Permissions-Policy: deny powerful APIs we don't use.
+    resp.headers.setdefault(
+        "Permissions-Policy",
+        "camera=(self), microphone=(), geolocation=(), payment=(), usb=()",
+    )
     resp.headers.setdefault(
         "Content-Security-Policy",
         "default-src 'self'; "
