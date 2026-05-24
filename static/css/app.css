@@ -2239,3 +2239,225 @@ input, select, button.btn { box-sizing: border-box; }
   .top-actions .btn { font-size: 13px; padding: 7px 10px; }
   .storage-chip-text { display: none; }
 }
+
+/* ==========================================================================
+   v18 — Auth page pro redesign (login, register, forgot, reset)
+   ========================================================================== */
+
+/* Dramatic full-page background — same orb energy as landing hero */
+.auth-page {
+  background: var(--bg);
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  position: relative;
+  overflow: hidden;
+}
+.auth-page::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px 600px at 15% 10%,  rgba(201,138,62,.22), transparent 60%),
+    radial-gradient(500px 500px at 85% 90%,  rgba(74,95,194,.18), transparent 60%),
+    radial-gradient(400px 400px at 50% 50%,  rgba(201,138,62,.06), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Card — glass with copper border glow */
+.auth-card {
+  background: rgba(15,15,18,.82);
+  -webkit-backdrop-filter: blur(28px);
+  backdrop-filter: blur(28px);
+  border: 1px solid rgba(201,138,62,.22);
+  padding: 48px 44px;
+  border-radius: 24px;
+  width: min(460px, 100%);
+  box-shadow:
+    0 32px 80px rgba(0,0,0,.65),
+    0 0 0 1px rgba(255,255,255,.04) inset,
+    0 0 60px rgba(201,138,62,.07);
+  position: relative;
+  z-index: 1;
+}
+
+/* Big logo at top — centered, with glow */
+.auth-card .logo.center {
+  justify-content: center;
+  margin-bottom: 32px;
+  gap: 12px;
+}
+.auth-card .logo.center svg {
+  width: 48px;
+  height: 48px;
+  filter: drop-shadow(0 4px 20px rgba(201,138,62,.5));
+}
+.auth-card .logo.center span {
+  font-size: 26px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #e8c27a 0%, #c98a3e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -.02em;
+}
+
+/* Headline */
+.auth-card h1 {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -.025em;
+  margin-bottom: 8px;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+/* Subtitle */
+.auth-card .sub {
+  font-size: 15px;
+  color: var(--muted);
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+/* Trust badges row — show under subtitle on login/register */
+.auth-trust {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  padding: 14px 16px;
+  background: rgba(201,138,62,.06);
+  border: 1px solid rgba(201,138,62,.12);
+  border-radius: 12px;
+}
+.auth-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #b0a89a;
+  font-weight: 500;
+}
+.auth-trust-item svg {
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+/* Divider */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--muted-2);
+  font-size: 12px;
+}
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Labels */
+.auth-card label {
+  display: block;
+  margin: 20px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: .01em;
+}
+.auth-card label:first-of-type { margin-top: 4px; }
+
+/* Inputs — bigger, cleaner */
+.auth-card input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(10,10,12,.8);
+  border: 1.5px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  transition: border-color .2s, box-shadow .2s;
+}
+.auth-card input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(201,138,62,.14);
+  background: rgba(10,10,12,.95);
+}
+
+/* Submit button */
+.auth-card button.btn-primary,
+.auth-card .btn.btn-primary.btn-block {
+  margin-top: 28px;
+  padding: 15px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: 12px;
+  letter-spacing: -.01em;
+  background: linear-gradient(135deg, #c98a3e 0%, #d4a843 100%);
+  box-shadow: 0 4px 20px rgba(201,138,62,.35);
+  transition: opacity .2s, box-shadow .2s, transform .15s;
+}
+.auth-card button.btn-primary:active,
+.auth-card .btn.btn-primary.btn-block:active {
+  transform: scale(.98);
+}
+
+/* Alt links */
+.auth-card .alt {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+.auth-card .alt a {
+  color: var(--primary-2);
+  font-weight: 600;
+}
+
+/* Alert messages */
+.auth-card .alert {
+  padding: 13px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+.auth-card .alert.error {
+  background: rgba(216,103,90,.1);
+  color: #f87171;
+  border: 1px solid rgba(216,103,90,.3);
+}
+.auth-card .alert.success {
+  background: rgba(109,191,143,.1);
+  color: #6dbf8f;
+  border: 1px solid rgba(109,191,143,.3);
+}
+.auth-card .alert.message {
+  background: rgba(201,138,62,.08);
+  color: var(--primary-2);
+  border: 1px solid rgba(201,138,62,.2);
+}
+
+/* RTL auth */
+body.rtl .auth-card { text-align: right; }
+body.rtl .auth-card .logo.center { flex-direction: row; justify-content: center; }
+body.rtl .auth-card label { text-align: right; }
+body.rtl .auth-card input { direction: ltr; text-align: left; }
+body.rtl .auth-card .alt { text-align: right; }
+body.rtl .auth-trust { flex-direction: row-reverse; }
+
+/* Mobile */
+@media (max-width: 480px) {
+  .auth-card { padding: 36px 24px; border-radius: 20px; }
+  .auth-card h1 { font-size: 26px; }
+  .auth-trust { gap: 10px; }
+}

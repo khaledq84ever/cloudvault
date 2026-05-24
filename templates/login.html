@@ -27,25 +27,30 @@
       <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#c98a3e"/><stop offset="100%" stop-color="#e0a35a"/></linearGradient></defs>
       <path d="M7 18a5 5 0 0 1-.7-9.95 6 6 0 0 1 11.6 1.05A4 4 0 0 1 17 18z" fill="url(#lg)"/>
     </svg>
-    <span style="font-size: 22px;">CloudVault</span>
+    <span>CloudVault</span>
   </a>
-  <h1>Welcome back</h1>
-  <p class="sub">Sign in to access your files</p>
+  <h1>{% if lang == 'ar' %}مرحباً بعودتك{% else %}Welcome back{% endif %}</h1>
+  <p class="sub">{% if lang == 'ar' %}سجّل دخولك للوصول إلى ملفاتك{% else %}Sign in to access your files{% endif %}</p>
+  <div class="auth-trust">
+    <div class="auth-trust-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>{% if lang == 'ar' %}مشفّر 256-bit{% else %}256-bit encrypted{% endif %}</div>
+    <div class="auth-trust-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9 12 2"/></svg>{% if lang == 'ar' %}500 ميجا مجاناً{% else %}500 MB free{% endif %}</div>
+    <div class="auth-trust-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>{% if lang == 'ar' %}كل الأجهزة{% else %}All devices{% endif %}</div>
+  </div>
   {% with msgs = get_flashed_messages(with_categories=true) %}
     {% for cat, msg in msgs %}<div class="alert {{cat}}">{{msg}}</div>{% endfor %}
   {% endwith %}
   <form method="POST" autocomplete="on">
-    <label for="login-email">Email</label>
+    <label for="login-email">{% if lang == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}</label>
     <input id="login-email" type="email" name="email" required autofocus
            autocomplete="email" inputmode="email" autocapitalize="off"
-           spellcheck="false">
-    <label for="login-password">Password</label>
+           spellcheck="false" placeholder="{% if lang == 'ar' %}example@email.com{% else %}you@example.com{% endif %}">
+    <label for="login-password">{% if lang == 'ar' %}كلمة المرور{% else %}Password{% endif %}</label>
     <input id="login-password" type="password" name="password" required
-           autocomplete="current-password">
-    <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+           autocomplete="current-password" placeholder="••••••••">
+    <button type="submit" class="btn btn-primary btn-block">{% if lang == 'ar' %}دخول{% else %}Sign in{% endif %}</button>
   </form>
-  <p class="alt" style="margin-bottom:6px"><a href="{{ url_for('forgot_password') }}">Forgot password?</a></p>
-  <p class="alt">New to CloudVault? <a href="{{ url_for('register') }}">Create an account</a></p>
+  <p class="alt" style="margin-bottom:6px"><a href="{{ url_for('forgot_password') }}">{% if lang == 'ar' %}نسيت كلمة المرور؟{% else %}Forgot password?{% endif %}</a></p>
+  <p class="alt">{% if lang == 'ar' %}ليس لديك حساب؟ <a href="{{ url_for('register') }}">أنشئ حساباً</a>{% else %}New to CloudVault? <a href="{{ url_for('register') }}">Create an account</a>{% endif %}</p>
 </div>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>
 </body>
