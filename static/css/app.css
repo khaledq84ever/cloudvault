@@ -2116,3 +2116,126 @@ body.rtl .device-phone { right: auto; left: -10px; }
 body.rtl .hero-cta { flex-direction: row-reverse; }
 body.rtl .hero-stat .lbl { letter-spacing: 0; }
 body.rtl .btn .ico { transform: scaleX(-1); }
+
+/* ==========================================================================
+   v17b — RTL/Arabic: drive, settings, shared, auth pages + global polish
+   ========================================================================== */
+
+/* --- Global RTL flip for flex rows with gap --- */
+body.rtl .appnav-inner,
+body.rtl .top-actions,
+body.rtl .toolbar-right,
+body.rtl .share-card-head,
+body.rtl .share-url-row,
+body.rtl .share-card-actions,
+body.rtl .dp-actions,
+body.rtl .uc-head,
+body.rtl .uc-actions { flex-direction: row-reverse; }
+
+body.rtl .sidebar { border-right: none; border-left: 1px solid rgba(255,255,255,.06); }
+body.rtl .details-panel { border-left: none; border-right: 1px solid rgba(255,255,255,.06); }
+body.rtl .breadcrumb { flex-direction: row-reverse; }
+body.rtl .crumb-sep { transform: scaleX(-1); }
+body.rtl .appnav-logo { flex-direction: row-reverse; }
+
+/* Drive sidebar RTL */
+body.rtl .side-nav { text-align: right; }
+body.rtl .side-link { flex-direction: row-reverse; justify-content: flex-end; }
+body.rtl .user-card { text-align: right; }
+body.rtl .uc-name { text-align: right; }
+
+/* Auth page RTL */
+body.rtl .auth-card { text-align: right; }
+body.rtl .auth-card label { text-align: right; display: block; }
+body.rtl .auth-card input { text-align: right; direction: ltr; } /* keep email/pw LTR input */
+body.rtl .auth-card .alt { text-align: right; }
+body.rtl .auth-card .logo.center { flex-direction: row; } /* keep logo LTR */
+
+/* Settings RTL */
+body.rtl .settings-card label { text-align: right; display: block; }
+body.rtl .settings-card { text-align: right; }
+body.rtl .settings-card input { direction: ltr; }
+
+/* Drive grid RTL — keep file names LTR but flip layout */
+body.rtl .grid.view-list .row { flex-direction: row-reverse; }
+body.rtl .grid.view-list .row .col-name { text-align: right; }
+body.rtl .action-bar { flex-direction: row-reverse; }
+
+/* Share pages RTL */
+body.rtl .share-folder-head { flex-direction: row-reverse; }
+body.rtl .share-folder-title { flex-direction: row-reverse; }
+body.rtl .sf-row { flex-direction: row-reverse; }
+body.rtl .sf-name { flex-direction: row-reverse; }
+body.rtl .share-crumbs { flex-direction: row-reverse; }
+
+/* Bottom nav RTL */
+body.rtl .bottom-nav { flex-direction: row-reverse; }
+
+/* Toast position RTL */
+body.rtl .toast { left: 50%; right: auto; transform: translateX(-50%); }
+
+/* --- Global layout polish (all langs) --- */
+
+/* Prevent horizontal overflow / scroll on all pages */
+html, body { overflow-x: hidden; max-width: 100vw; }
+
+/* Smooth scroll everywhere */
+html { scroll-behavior: smooth; }
+
+/* Auth cards — better mobile sizing */
+.auth-card {
+  width: min(420px, 94vw);
+  box-sizing: border-box;
+}
+
+/* Settings page max width + padding */
+.settings-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 24px 16px 80px;
+  box-sizing: border-box;
+}
+
+/* Shared/links page */
+.shares-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+/* Share card mobile */
+@media (max-width: 640px) {
+  .share-url-row { flex-direction: column; align-items: stretch; }
+  .share-url-row input { width: 100%; box-sizing: border-box; }
+  .share-card-actions { flex-wrap: wrap; }
+  body.rtl .share-card-head { flex-direction: column; }
+}
+
+/* Drive mobile — fix sidebar overflow */
+@media (max-width: 900px) {
+  .drive-grid { grid-template-columns: 1fr !important; }
+  .sidebar { display: none; }
+  .details-panel { position: fixed; bottom: 0; left: 0; right: 0; max-height: 80vh; overflow-y: auto; border-radius: 20px 20px 0 0; }
+  body.rtl .details-panel { border-right: none; }
+}
+
+/* Fix input/button height consistency */
+input, select, button.btn { box-sizing: border-box; }
+
+/* Prevent text overflow in file names */
+.col-name, .sf-label, .dc-name, .share-card-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Drive topbar on small screens */
+@media (max-width: 600px) {
+  .top-actions { flex-wrap: wrap; gap: 6px; }
+  .top-actions .btn { font-size: 13px; padding: 7px 10px; }
+  .storage-chip-text { display: none; }
+}
