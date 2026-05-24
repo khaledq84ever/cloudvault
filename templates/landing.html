@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ lang }}" dir="{{ dir }}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -14,120 +14,155 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-touch-icon.png">
-<title>CloudVault — Cloud storage that just works</title>
+<title>{% if lang == 'ar' %}كلاودفولت — تخزين سحابي بسيط{% else %}CloudVault — Cloud storage that just works{% endif %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}?v={{ cb }}">
 </head>
-<body class="landing">
+<body class="landing {{ 'rtl' if dir == 'rtl' else '' }}">
 {% include '_appnav.html' %}
 
-<header class="hero">
-  <span class="hero-eyebrow whats-new"><span class="dot"></span>Updated May 2026 · 500 MB free · no card</span>
-  <h1>Cloud storage,<br><span class="grad">finally simple.</span></h1>
-  <p>Upload, share, preview, sync across every device in real time. Built clean — no plans, no paywalls, no ads.</p>
+<header class="hero hero-v2">
+  <div class="hero-bg-orb o1"></div>
+  <div class="hero-bg-orb o2"></div>
+
+  <span class="hero-eyebrow whats-new"><span class="dot"></span>{{ t.hero_eyebrow }}</span>
+  <h1>{{ t.hero_title_1 }}<br><span class="grad">{{ t.hero_title_2 }}</span></h1>
+  <p>{{ t.hero_sub }}</p>
   <div class="hero-cta">
     <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg btn-glow">
       <svg class="ico" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      Start free — 500 MB
+      {{ t.hero_cta_start }}
     </a>
-    <a href="{{ url_for('login') }}" class="btn btn-ghost btn-lg">Sign in</a>
+    <a href="{{ url_for('login') }}" class="btn btn-ghost btn-lg">{{ t.hero_cta_signin }}</a>
   </div>
 
   <div class="hero-stats">
-    <div class="hero-stat"><div class="num">500 MB</div><div class="lbl">Free forever</div></div>
-    <div class="hero-stat"><div class="num">256‑bit</div><div class="lbl">AES encrypted</div></div>
-    <div class="hero-stat"><div class="num">∞</div><div class="lbl">Devices</div></div>
-    <div class="hero-stat"><div class="num">~60s</div><div class="lbl">To get started</div></div>
-  </div>
-
-  <div class="hero-art">
-    <div class="float-card c1">
-      <div class="fc-ico"><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
-      <div><div>contract.pdf</div><div class="fc-meta">2.4 MB · synced</div></div>
-    </div>
-    <div class="float-card c2">
-      <div class="fc-ico"><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div>
-      <div><div>vacation.jpg</div><div class="fc-meta">4.8 MB · shared</div></div>
-    </div>
-    <div class="float-card c3">
-      <div class="fc-ico"><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><polygon points="10 9 16 12 10 15 10 9" fill="currentColor"/></svg></div>
-      <div><div>demo.mp4</div><div class="fc-meta">128 MB · uploading…</div></div>
-    </div>
-    <div class="float-card c4">
-      <div class="fc-ico"><svg class="ico" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-      <div><div>budget.xlsx</div><div class="fc-meta">512 KB · starred</div></div>
-    </div>
+    <div class="hero-stat"><div class="num">500 MB</div><div class="lbl">{{ t.stat_storage }}</div></div>
+    <div class="hero-stat"><div class="num">256‑bit</div><div class="lbl">{{ t.stat_encrypted }}</div></div>
+    <div class="hero-stat"><div class="num">∞</div><div class="lbl">{{ t.stat_devices }}</div></div>
+    <div class="hero-stat"><div class="num">~60s</div><div class="lbl">{{ t.stat_setup }}</div></div>
   </div>
 </header>
+
+<section class="showcase">
+  <h2>{{ t.shot_title }}</h2>
+  <p class="sub">{{ t.shot_sub }}</p>
+
+  <div class="device-stack">
+    <div class="device device-desktop" aria-hidden="true">
+      <div class="dev-chrome">
+        <span class="cd r"></span><span class="cd y"></span><span class="cd g"></span>
+        <div class="dev-url">cloudvault.app / my files</div>
+      </div>
+      <div class="dev-body">
+        <div class="dev-sidebar">
+          <div class="ds-row active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>{% if lang == 'ar' %}الرئيسية{% else %}Home{% endif %}</span></div>
+          <div class="ds-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/></svg><span>{% if lang == 'ar' %}مشترك{% else %}Shared{% endif %}</span></div>
+          <div class="ds-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15 9 22 9 17 14 19 21 12 17 5 21 7 14 2 9 9 9 12 2"/></svg><span>{% if lang == 'ar' %}مفضّل{% else %}Starred{% endif %}</span></div>
+          <div class="ds-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg><span>{% if lang == 'ar' %}المهملات{% else %}Trash{% endif %}</span></div>
+          <div class="ds-quota"><div class="ds-quota-bar"><i style="width:34%"></i></div><span>170 / 500 MB</span></div>
+        </div>
+        <div class="dev-main">
+          <div class="dev-toolbar">
+            <div class="dev-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><span>{% if lang == 'ar' %}ابحث في ملفاتك{% else %}Search files{% endif %}</span></div>
+            <div class="dev-upload">↑ {% if lang == 'ar' %}رفع{% else %}Upload{% endif %}</div>
+          </div>
+          <div class="dev-grid">
+            <div class="dev-card"><div class="dc-thumb t-img"></div><div class="dc-name">sunset.jpg</div><div class="dc-meta">4.8 MB</div></div>
+            <div class="dev-card"><div class="dc-thumb t-vid"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8 5 19 12 8 19 8 5"/></svg></div><div class="dc-name">demo.mp4</div><div class="dc-meta">128 MB</div></div>
+            <div class="dev-card"><div class="dc-thumb t-pdf">PDF</div><div class="dc-name">contract.pdf</div><div class="dc-meta">2.4 MB</div></div>
+            <div class="dev-card"><div class="dc-thumb t-img g2"></div><div class="dc-name">design.png</div><div class="dc-meta">1.2 MB</div></div>
+            <div class="dev-card"><div class="dc-thumb t-zip">ZIP</div><div class="dc-name">archive.zip</div><div class="dc-meta">32 MB</div></div>
+            <div class="dev-card"><div class="dc-thumb t-xls">XLS</div><div class="dc-name">budget.xlsx</div><div class="dc-meta">512 KB</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="device device-phone" aria-hidden="true">
+      <div class="phone-screen">
+        <div class="phone-statusbar"><span>9:41</span><span>●●● 5G</span></div>
+        <div class="phone-header">CloudVault</div>
+        <div class="phone-card up">
+          <div class="pc-ico ic-img"></div>
+          <div class="pc-info"><div>vacation.jpg</div><div class="pc-meta">{% if lang == 'ar' %}يُرفع · 78%{% else %}Uploading · 78%{% endif %}</div></div>
+        </div>
+        <div class="phone-card"><div class="pc-ico ic-pdf">PDF</div><div class="pc-info"><div>contract.pdf</div><div class="pc-meta">{% if lang == 'ar' %}مزامن{% else %}Synced{% endif %} · 2.4 MB</div></div></div>
+        <div class="phone-card"><div class="pc-ico ic-vid"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="8 5 19 12 8 19 8 5"/></svg></div><div class="pc-info"><div>demo.mp4</div><div class="pc-meta">{% if lang == 'ar' %}مُشارك{% else %}Shared{% endif %} · 128 MB</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section class="features" id="features">
   <div class="feat">
     <div class="ico">
       <svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     </div>
-    <h3>Bank‑grade security</h3>
-    <p>AES‑256 encrypted at rest and in transit. Password‑protected share links with optional expiry.</p>
+    <h3>{{ t.feat_security_t }}</h3>
+    <p>{{ t.feat_security_d }}</p>
   </div>
   <div class="feat">
     <div class="ico">
       <svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
     </div>
-    <h3>Blazing fast</h3>
-    <p>Chunked resumable uploads, presigned downloads, video thumbnails generated on the fly.</p>
+    <h3>{{ t.feat_fast_t }}</h3>
+    <p>{{ t.feat_fast_d }}</p>
   </div>
   <div class="feat">
     <div class="ico">
       <svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 1 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg>
     </div>
-    <h3>Share with anyone</h3>
-    <p>One‑click public links. Set expiry, password, or view‑only. Revoke any time.</p>
+    <h3>{{ t.feat_share_t }}</h3>
+    <p>{{ t.feat_share_d }}</p>
   </div>
   <div class="feat">
     <div class="ico">
       <svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>
     </div>
-    <h3>Works everywhere</h3>
-    <p>Mobile, tablet, desktop — same vault. Real‑time sync over Server‑Sent Events.</p>
+    <h3>{{ t.feat_every_t }}</h3>
+    <p>{{ t.feat_every_d }}</p>
   </div>
   <div class="feat">
     <div class="ico">
       <svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></svg>
     </div>
-    <h3>30‑day recovery</h3>
-    <p>Accidentally deleted? No worries. Trash keeps everything for 30 days before permanent removal.</p>
+    <h3>{{ t.feat_recovery_t }}</h3>
+    <p>{{ t.feat_recovery_d }}</p>
   </div>
   <div class="feat">
     <div class="ico">
       <svg class="ico" aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7l-1 12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 7"/><path d="M4 7h16M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/><circle cx="12" cy="13" r="3"/></svg>
     </div>
-    <h3>You own your data</h3>
-    <p>Export everything as a zip any time. No vendor lock‑in. Open source code on GitHub.</p>
+    <h3>{{ t.feat_owned_t }}</h3>
+    <p>{{ t.feat_owned_d }}</p>
   </div>
 </section>
 
 <section class="pricing">
-  <h2>Free for everyone</h2>
-  <p class="sub">No paywalls, no plans, no credit card. Sign up and start storing.</p>
+  <h2>{{ t.price_title }}</h2>
+  <p class="sub">{{ t.price_sub }}</p>
   <div class="plans" style="justify-content:center">
     <div class="plan featured" style="max-width:380px">
-      <span class="badge">Free forever</span>
+      <span class="badge">{{ t.price_badge }}</span>
       <h3>CloudVault</h3>
-      <div class="price">$0<span>/mo</span></div>
+      <div class="price">{{ t.price_value }}<span>{{ t.price_value_per }}</span></div>
       <ul>
-        <li>500 MB storage per account</li>
-        <li>100 MB max file size</li>
-        <li>Unlimited devices</li>
-        <li>Permanent share links</li>
-        <li>Password‑protected sharing</li>
+        <li>{{ t.price_li_1 }}</li>
+        <li>{{ t.price_li_2 }}</li>
+        <li>{{ t.price_li_3 }}</li>
+        <li>{{ t.price_li_4 }}</li>
+        <li>{{ t.price_li_5 }}</li>
       </ul>
-      <a href="{{ url_for('register') }}" class="btn btn-primary btn-block">Create account</a>
+      <a href="{{ url_for('register') }}" class="btn btn-primary btn-block">{{ t.price_cta }}</a>
     </div>
   </div>
 </section>
 
 <footer class="foot">
-  <p>© 2026 CloudVault · Last update May 24, 2026 · <a href="mailto:khaledq8tv@gmail.com">Contact</a></p>
+  <p>{{ t.footer }} <a href="mailto:khaledq8tv@gmail.com">{{ t.footer_contact }}</a> · <a href="/set-lang/{{ 'en' if lang == 'ar' else 'ar' }}">{{ t.lang_toggle }}</a></p>
 </footer>
 <script src="/static/js/appnav.js?v={{ cb }}" defer></script>
 <script src="/static/js/pwa.js?v={{ cb }}" defer></script>

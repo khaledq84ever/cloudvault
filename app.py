@@ -58,9 +58,117 @@ app.config["PREFERRED_URL_SCHEME"] = "https"
 
 _CACHE_BUST = secrets.token_hex(4)
 
+TRANSLATIONS = {
+    "en": {
+        "nav_features": "Features",
+        "nav_pricing": "Pricing",
+        "nav_signin": "Sign in",
+        "nav_signup": "Sign up free",
+        "lang_toggle": "العربية",
+        "hero_eyebrow": "Updated May 2026 · 500 MB free · no card",
+        "hero_title_1": "Your files,",
+        "hero_title_2": "everywhere you are.",
+        "hero_sub": "Upload, share, preview, and sync across every device — instantly. No plans, no paywalls, no ads. Ever.",
+        "hero_cta_start": "Get started free",
+        "hero_cta_signin": "I have an account",
+        "stat_storage": "Free forever",
+        "stat_encrypted": "AES encrypted",
+        "stat_devices": "Devices",
+        "stat_setup": "To get started",
+        "shot_title": "Built for how you actually work",
+        "shot_sub": "A clean, fast dashboard that feels native on every device. Drag, drop, share, done.",
+        "feat_security_t": "Encrypted end‑to‑end",
+        "feat_security_d": "AES‑256 at rest and in transit. Share links you can password‑protect, expire, or revoke any time.",
+        "feat_fast_t": "Stupidly fast",
+        "feat_fast_d": "Chunked resumable uploads, signed downloads, instant video previews. Even on flaky 4G.",
+        "feat_share_t": "Share with one tap",
+        "feat_share_d": "One link, every device. Set a password, set an expiry, or revoke when you're done.",
+        "feat_every_t": "Phone, tablet, laptop",
+        "feat_every_d": "One vault, every screen. Real‑time sync via Server‑Sent Events — no refresh needed.",
+        "feat_recovery_t": "30‑day undo",
+        "feat_recovery_d": "Deleted by mistake? Trash holds it 30 days. No support ticket required.",
+        "feat_owned_t": "You own your data",
+        "feat_owned_d": "Export the whole vault as a zip whenever. Open source on GitHub. Zero lock‑in.",
+        "price_title": "One plan. Free. Forever.",
+        "price_sub": "No paywalls, no credit card, no upsell emails. Sign up in 60 seconds.",
+        "price_badge": "Free forever",
+        "price_value": "$0",
+        "price_value_per": "/mo",
+        "price_li_1": "500 MB encrypted storage",
+        "price_li_2": "100 MB per file",
+        "price_li_3": "Unlimited devices",
+        "price_li_4": "Permanent share links",
+        "price_li_5": "Password protection on every link",
+        "price_cta": "Create my account",
+        "footer": "© 2026 CloudVault · Last update May 24, 2026 ·",
+        "footer_contact": "Contact",
+    },
+    "ar": {
+        "nav_features": "المميزات",
+        "nav_pricing": "الأسعار",
+        "nav_signin": "تسجيل الدخول",
+        "nav_signup": "إنشاء حساب مجاني",
+        "lang_toggle": "English",
+        "hero_eyebrow": "تحديث مايو 2026 · ‎500 ميجا مجاناً · بدون بطاقة",
+        "hero_title_1": "ملفاتك،",
+        "hero_title_2": "في كل مكان معك.",
+        "hero_sub": "ارفع، شارك، عاين، وزامن بين كل أجهزتك — فوراً. بدون باقات، بدون رسوم خفية، بدون إعلانات. أبداً.",
+        "hero_cta_start": "ابدأ مجاناً الآن",
+        "hero_cta_signin": "لدي حساب بالفعل",
+        "stat_storage": "مجاناً للأبد",
+        "stat_encrypted": "تشفير AES",
+        "stat_devices": "الأجهزة",
+        "stat_setup": "للبدء",
+        "shot_title": "مصمم لطريقتك في العمل",
+        "shot_sub": "لوحة تحكم نظيفة وسريعة بإحساس أصلي على كل جهاز. اسحب، أفلت، شارك، انتهى.",
+        "feat_security_t": "تشفير من طرف إلى طرف",
+        "feat_security_d": "تشفير AES‑256 أثناء التخزين والنقل. روابط مشاركة محمية بكلمة سر، مع صلاحية وإلغاء في أي وقت.",
+        "feat_fast_t": "سرعة جنونية",
+        "feat_fast_d": "رفع مقسّم قابل للاستئناف، تنزيلات موقّعة، معاينات فيديو فورية. حتى على شبكة 4G الضعيفة.",
+        "feat_share_t": "مشاركة بضغطة واحدة",
+        "feat_share_d": "رابط واحد، كل الأجهزة. ضع كلمة سر، أو تاريخ انتهاء، أو ألغِ المشاركة متى شئت.",
+        "feat_every_t": "جوال، تابلت، لابتوب",
+        "feat_every_d": "خزنة واحدة، كل الشاشات. مزامنة فورية عبر SSE — بلا تحديث للصفحة.",
+        "feat_recovery_t": "تراجع لمدة 30 يوم",
+        "feat_recovery_d": "حذفت ملفاً بالخطأ؟ سلة المهملات تحتفظ به 30 يوماً. بدون الحاجة لأي دعم فني.",
+        "feat_owned_t": "بياناتك ملكك",
+        "feat_owned_d": "صدّر كل ملفاتك كملف مضغوط متى شئت. كود مفتوح المصدر على GitHub. لا قيود.",
+        "price_title": "خطة واحدة. مجانية. للأبد.",
+        "price_sub": "بدون باقات، بدون بطاقة ائتمان، بدون إيميلات إزعاج. سجّل خلال 60 ثانية.",
+        "price_badge": "مجاناً للأبد",
+        "price_value": "0$",
+        "price_value_per": "/شهر",
+        "price_li_1": "500 ميجا تخزين مشفّر",
+        "price_li_2": "100 ميجا لكل ملف",
+        "price_li_3": "أجهزة بلا حد",
+        "price_li_4": "روابط مشاركة دائمة",
+        "price_li_5": "حماية بكلمة سر لكل رابط",
+        "price_cta": "أنشئ حسابي",
+        "footer": "© 2026 CloudVault · آخر تحديث 24 مايو 2026 ·",
+        "footer_contact": "تواصل",
+    },
+}
+
+
 @app.context_processor
-def inject_cache_bust() -> dict[str, str]:
-    return {"cb": _CACHE_BUST}
+def inject_cache_bust() -> dict:
+    lang = request.args.get("lang") or request.cookies.get("cv_lang") or "en"
+    if lang not in TRANSLATIONS:
+        lang = "en"
+    return {
+        "cb": _CACHE_BUST,
+        "lang": lang,
+        "dir": "rtl" if lang == "ar" else "ltr",
+        "t": TRANSLATIONS[lang],
+    }
+
+
+@app.route("/set-lang/<lang>")
+def set_lang(lang: str) -> Response:
+    resp = redirect(request.referrer or "/")
+    if lang in TRANSLATIONS:
+        resp.set_cookie("cv_lang", lang, max_age=31536000, samesite="Lax")
+    return resp
 
 secret_env = os.environ.get("SECRET_KEY")
 if not secret_env and os.environ.get("FLASK_ENV") == "production":
