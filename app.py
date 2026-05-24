@@ -82,6 +82,7 @@ db.init_app(app)
 
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
+login_manager.login_message = None
 
 limiter = Limiter(get_remote_address, app=app, default_limits=[])
 
