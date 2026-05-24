@@ -3096,3 +3096,142 @@ body.rtl .action-label { text-align: right; }
   background: var(--bg);
   min-height: 100dvh;
 }
+
+/* ============================================================
+   v21 — polish pass (2026-05-24)
+   Surgical visible-polish sweep: bottom nav readability,
+   selection / focus / scrollbar accent colors, button feedback,
+   typography crispness, RTL parity. Append-only; doesn't touch
+   layout tokens — overrides only the rules a user actually sees.
+   ============================================================ */
+
+/* --- Global text-rendering crispness ------------------------ */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'cv11', 'ss01', 'kern';   /* Inter v4 stylistic alts: nicer 'a' & '1' */
+}
+::selection { background: rgba(201,138,62,.32); color: #fff8ee; }
+::-moz-selection { background: rgba(201,138,62,.32); color: #fff8ee; }
+
+/* --- Scrollbar: copper accent on hover ---------------------- */
+*::-webkit-scrollbar-thumb:hover { background: var(--primary-3); }
+* { scrollbar-color: var(--border) transparent; }
+*:hover { scrollbar-color: var(--primary-3) transparent; }
+
+/* --- Focus ring: single consistent outline app-wide --------- */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+/* Don't double-ring inside cards that already have their own ring */
+.card:focus-visible, .auth-card:focus-visible { outline-offset: 4px; }
+
+/* --- Typography: page titles read crisper ------------------- */
+h1, h2, h3 { letter-spacing: -0.02em; text-wrap: balance; }
+h1 { line-height: 1.08; }
+h2 { line-height: 1.15; }
+p, li { text-wrap: pretty; }                       /* avoid orphan words */
+:root { --muted: #9a9385; }                        /* lift muted text from #8d8779 → +1 contrast tier */
+
+/* --- Buttons: visible press depress, accessible disabled --- */
+.btn { transition: transform .08s var(--ease), box-shadow .15s var(--ease), background .15s var(--ease), opacity .15s; }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled, .btn[aria-disabled="true"] { opacity: .55; cursor: not-allowed; }
+.btn-primary { box-shadow: 0 6px 18px rgba(201,138,62,.22); }
+.btn-primary:hover:not(:disabled) { box-shadow: 0 10px 26px rgba(201,138,62,.32); }
+
+/* --- Inputs: gentler resting state, copper ring on focus --- */
+input:not([type="checkbox"]):not([type="radio"]),
+textarea, select {
+  transition: border-color .15s var(--ease), box-shadow .15s var(--ease), background .15s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(201,138,62,.22) !important;
+  outline: none !important;
+}
+
+/* --- Bottom nav: bigger label, clearer active state --------- */
+@media (max-width: 1024px) {
+  .bottom-nav {
+    background: rgba(15,15,18,.92);
+    -webkit-backdrop-filter: saturate(140%) blur(18px);
+    backdrop-filter: saturate(140%) blur(18px);
+    border-top: 1px solid rgba(255,255,255,.06);
+    box-shadow: 0 -8px 30px rgba(0,0,0,.45);
+  }
+  .bn-link {
+    color: var(--text-2);                          /* was --muted; now readable */
+    gap: 4px;
+    padding: 8px 6px;
+    position: relative;
+  }
+  .bn-link span {
+    font-size: 11px;                               /* was 10px — tiny */
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+  .bn-link.active {
+    color: var(--primary-2);                       /* warmer copper on active */
+  }
+  .bn-link.active::before {
+    content: '';
+    position: absolute;
+    top: 4px; left: 50%;
+    width: 26px; height: 3px;
+    background: var(--primary);
+    border-radius: 2px;
+    transform: translateX(-50%);
+  }
+  .bn-link:active { transform: scale(.94); transition: transform .08s var(--ease); }
+  /* Plus button: a little taller, stronger glow */
+  .bn-up {
+    width: 52px !important; height: 52px !important;
+    box-shadow: 0 10px 24px rgba(201,138,62,.5), 0 0 0 4px rgba(201,138,62,.08);
+  }
+  .bn-up::before { display: none; }                /* no active bar on the FAB */
+}
+
+/* --- Topbar: cleaner blur, no harsh borderline -------------- */
+.topbar {
+  -webkit-backdrop-filter: saturate(150%) blur(14px);
+  backdrop-filter: saturate(150%) blur(14px);
+}
+.topbar.scrolled {
+  background: rgba(10,10,12,.78);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+
+/* --- Cards: smoother hover (less jump, more lift) ----------- */
+.card { transition: transform .15s var(--ease), border-color .15s var(--ease), box-shadow .2s var(--ease); }
+.card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,.35); }
+.card:active { transform: translateY(0); transition-duration: .05s; }
+
+/* --- Toasts: snap to mobile safe area, never overlap nav ---- */
+.toast, .cv-toast {
+  bottom: calc(20px + env(safe-area-inset-bottom)) !important;
+}
+body.has-bottom-nav .toast,
+body.has-bottom-nav .cv-toast {
+  bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+}
+
+/* --- Icons: tighten stroke for less heavy feel -------------- */
+svg.ico[stroke-width="2"] { stroke-width: 1.8; }
+
+/* --- Modal: roomier padding + scroll-locked body when open -- */
+.modal-card { padding: clamp(20px, 3vw, 32px); }
+body.modal-open { overflow: hidden; }
+
+/* --- Reduced-motion: kill big transitions ------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .card:hover, .btn:active:not(:disabled) { transform: none; }
+}
+
+/* --- RTL parity for the v21 additions ----------------------- */
+body.rtl .bn-link.active::before { left: 50%; }    /* centered anyway, but explicit */
+body.rtl .toast, body.rtl .cv-toast { left: auto; right: 50%; transform: translateX(50%); }
