@@ -238,19 +238,19 @@ async function loadList() {
 }
 
 const VIEW_TITLES = _AR ? {
-  my: [‘ملفاتي’, ‘جميع ملفاتك.’],
-  recent: [‘الأحدث’, ‘الملفات التي فتحتها أو عدّلتها مؤخراً.’],
-  starred: [‘المميزة’, ‘العناصر التي علّمتها للوصول السريع.’],
-  shared: [‘مشاركاتي’, ‘الملفات التي شاركتها عبر رابط.’],
-  trash: [‘المهملات’, ‘تُحذف العناصر هنا بعد 30 يوماً.’],
-  tag: [‘بالتصنيف’, ‘العناصر المطابقة للتصنيف المحدد.’],
+  my: ['ملفاتي', 'جميع ملفاتك.'],
+  recent: ['الأحدث', 'الملفات التي فتحتها أو عدّلتها مؤخراً.'],
+  starred: ['المميزة', 'العناصر التي علّمتها للوصول السريع.'],
+  shared: ['مشاركاتي', 'الملفات التي شاركتها عبر رابط.'],
+  trash: ['المهملات', 'تُحذف العناصر هنا بعد 30 يوماً.'],
+  tag: ['بالتصنيف', 'العناصر المطابقة للتصنيف المحدد.'],
 } : {
-  my: [‘My Drive’, ‘Everything you own.’],
-  recent: [‘Recent’, ‘Files you opened or edited lately.’],
-  starred: [‘Starred’, ‘Items you marked for quick access.’],
-  shared: [‘Shared by me’, ‘Files you\’ve given out via a link.’],
-  trash: [‘Trash’, ‘Items here are deleted after 30 days.’],
-  tag: [‘Tagged’, ‘Items matching the selected tag.’],
+  my: ['My Drive', 'Everything you own.'],
+  recent: ['Recent', 'Files you opened or edited lately.'],
+  starred: ['Starred', 'Items you marked for quick access.'],
+  shared: ['Shared by me', 'Files you\'ve given out via a link.'],
+  trash: ['Trash', 'Items here are deleted after 30 days.'],
+  tag: ['Tagged', 'Items matching the selected tag.'],
 };
 function renderPageTitle(crumb) {
   const titleEl = document.getElementById('pageTitle');

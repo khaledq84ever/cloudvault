@@ -3,7 +3,7 @@
    CSS/JS into SHELL_CACHE, and caches.match() returned those stale copies before
    checking RUNTIME_CACHE. Now CSS/JS go network-first, so every deploy is picked up
    on the next request without bumping VERSION. */
-const VERSION = 'cv-sw-v20';
+const VERSION = 'cv-sw-v21';
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
