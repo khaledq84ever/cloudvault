@@ -71,12 +71,12 @@ async function load() {
       </div>
       <div class="share-url-row">
         <span class="share-url-label">SHARE LINK</span>
-        <input type="text" readonly value="${esc(s.url)}">
+        <input type="text" readonly value="${esc(s.url)}" aria-label="Share URL">
         <button class="btn btn-primary" data-copy="${esc(s.url)}">Copy</button>
       </div>
       <div class="share-url-row">
         <span class="share-url-label">DIRECT DOWNLOAD</span>
-        <input type="text" readonly value="${esc(s.download_url)}">
+        <input type="text" readonly value="${esc(s.download_url)}" aria-label="Direct download link">
         <button class="btn btn-primary" data-copy="${esc(s.download_url)}">Copy</button>
       </div>
       <div class="share-card-actions">

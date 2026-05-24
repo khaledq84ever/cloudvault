@@ -32,7 +32,7 @@
     <h2>{% if lang == 'ar' %}الحساب{% else %}Account{% endif %}</h2>
     <p class="muted">{% if lang == 'ar' %}تحديث معلومات ملفك الشخصي{% else %}Update your profile information{% endif %}</p>
     <label>{% if lang == 'ar' %}البريد الإلكتروني{% else %}Email{% endif %}</label>
-    <input type="email" value="{{ user.email }}" disabled>
+    <input type="email" value="{{ user.email }}" disabled aria-label="{% if lang == 'ar' %}البريد الإلكتروني{% else %}Email address{% endif %}">
     <label for="nameInput">{% if lang == 'ar' %}الاسم المعروض{% else %}Display name{% endif %}</label>
     <input type="text" id="nameInput" value="{{ user.name }}" placeholder="{% if lang == 'ar' %}اسمك{% else %}Your name{% endif %}">
     <div class="row">

@@ -236,7 +236,7 @@
       {% if lang == 'ar' %}تنزيل مباشر{% else %}Direct download{% endif %}
     </div>
     <div class="dp-link-row">
-      <input type="text" id="dpDownloadInput" readonly>
+      <input type="text" id="dpDownloadInput" readonly aria-label="Direct download link">
       <button class="btn btn-primary copy-link-btn" id="dpCopyDownload" data-share-url="" title="Copy direct download link">{% if lang == 'ar' %}نسخ{% else %}Copy{% endif %}</button>
     </div>
   </div>
@@ -349,7 +349,7 @@
     <h3 id="shareModalTitle">{% if lang == 'ar' %}رابط المشاركة{% else %}Share link{% endif %}</h3>
     <p class="muted" id="shareModalSubtitle">{% if lang == 'ar' %}تحكم في من يمكنه الوصول لهذا الملف{% else %}Configure who can access this file{% endif %}</p>
     <div class="share-row">
-      <input type="text" id="shareUrl" readonly>
+      <input type="text" id="shareUrl" readonly aria-label="Share URL">
       <button class="btn btn-primary" id="copyBtn">{% if lang == 'ar' %}نسخ{% else %}Copy{% endif %}</button>
     </div>
 
@@ -364,7 +364,7 @@
     <label class="expiry-label">{% if lang == 'ar' %}رابط مخصص (اختياري){% else %}Pretty link (optional){% endif %}</label>
     <div class="share-row alias-row">
       <span class="alias-prefix" id="aliasPrefix">/s/</span>
-      <input type="text" id="shareAlias" placeholder="{% if lang == 'ar' %}صورتي{% else %}my-photo{% endif %}" maxlength="60" autocapitalize="none" autocorrect="off" spellcheck="false">
+      <input type="text" id="shareAlias" placeholder="{% if lang == 'ar' %}صورتي{% else %}my-photo{% endif %}" maxlength="60" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="{% if lang == 'ar' %}اسم مخصص للرابط{% else %}Custom share alias{% endif %}">
       <button class="btn btn-primary" id="aliasSave">{% if lang == 'ar' %}حفظ{% else %}Save{% endif %}</button>
     </div>
     <div class="alias-hint" id="aliasHint">{% if lang == 'ar' %}أحرف صغيرة وأرقام وشرطات. 4–60 حرفاً.{% else %}Lowercase letters, digits, hyphens. 4–60 chars.{% endif %}</div>
@@ -377,7 +377,7 @@
       <option value="168">{% if lang == 'ar' %}7 أيام{% else %}7 days{% endif %}</option>
     </select>
     <label class="expiry-label">{% if lang == 'ar' %}كلمة المرور (اختياري){% else %}Password (optional){% endif %}</label>
-    <input type="text" id="sharePassword" placeholder="{% if lang == 'ar' %}اتركه فارغاً للوصول المفتوح{% else %}Leave empty for no password{% endif %}" class="select" style="width:100%;">
+    <input type="text" id="sharePassword" placeholder="{% if lang == 'ar' %}اتركه فارغاً للوصول المفتوح{% else %}Leave empty for no password{% endif %}" class="select" style="width:100%;" aria-label="{% if lang == 'ar' %}كلمة مرور للرابط (اختيارية){% else %}Share password (optional){% endif %}">
     <label class="check-row" style="margin-top:14px;">
       <input type="checkbox" id="shareAllowDownload" checked>
       <span>{% if lang == 'ar' %}السماح بالتنزيل{% else %}Allow download{% endif %}</span>
@@ -425,12 +425,12 @@
   </div>
   <div class="pub-row">
     <span class="pub-label">Share link</span>
-    <input type="text" id="pubShareInput" readonly>
+    <input type="text" id="pubShareInput" readonly aria-label="Public share link">
     <button class="btn btn-primary copy-link-btn" id="pubCopyShare" data-share-url="">Copy</button>
   </div>
   <div class="pub-row">
     <span class="pub-label">Download link</span>
-    <input type="text" id="pubDownloadInput" readonly>
+    <input type="text" id="pubDownloadInput" readonly aria-label="Direct download link">
     <button class="btn btn-primary copy-link-btn" id="pubCopyDownload" data-share-url="">Copy</button>
   </div>
 </div>
