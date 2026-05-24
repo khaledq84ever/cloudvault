@@ -9,6 +9,7 @@ const UI = _AR ? {
   deleted: 'تم الحذف', linkCopied: 'تم نسخ الرابط', failedCopy: 'فشل نسخ الرابط',
   uploading: 'جارٍ الرفع', uploadDone: 'اكتمل الرفع', uploadFailed: 'فشل الرفع',
   uploadPaused: 'الرفع متوقف مؤقتاً',
+  undo: 'تراجع',
 } : {
   myDrive: 'My Drive', myDriveRoot: 'My Drive (root)',
   moveTo: 'Move to…', copyTo: 'Copy to…', moveHere: 'Move here', copyHere: 'Copy here',
@@ -18,6 +19,7 @@ const UI = _AR ? {
   deleted: 'Deleted', linkCopied: 'Link copied', failedCopy: 'Failed to copy link',
   uploading: 'Uploading', uploadDone: 'Upload finished', uploadFailed: 'Upload failed',
   uploadPaused: 'Upload paused',
+  undo: 'Undo',
 };
 const state = {
   view: 'my', folder: null, tagId: null,
@@ -88,22 +90,53 @@ const TOAST_ICONS = {
   info: '<svg class="toast-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
 };
 const TOAST_CLOSE_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
-function toast(msg, type='') {
+function toast(msg, type='', opts) {
   const t = $('#toast');
   const variant = type || 'info';
   t.className = 'toast ' + (type || '');
+  const actionBtn = (opts && opts.action)
+    ? `<button type="button" class="toast-action">${escapeHtml(opts.action.label)}</button>`
+    : '';
   t.innerHTML = `
     ${TOAST_ICONS[variant] || TOAST_ICONS.info}
     <span class="toast-msg"></span>
+    ${actionBtn}
     <button type="button" class="toast-close" aria-label="Dismiss">${TOAST_CLOSE_SVG}</button>
   `;
   t.querySelector('.toast-msg').textContent = msg;
   t.querySelector('.toast-close').onclick = () => { t.hidden = true; };
+  if (opts && opts.action) {
+    t.querySelector('.toast-action').onclick = () => {
+      t.hidden = true;
+      try { opts.action.fn(); } catch (_) {}
+    };
+  }
   t.hidden = false;
   clearTimeout(window.__toastT);
-  // Errors stick around longer — they're usually actionable.
-  const dwell = (type === 'error') ? 4500 : 2600;
+  // Errors stick longer; toasts with an action need time to react to.
+  let dwell = 2600;
+  if (type === 'error') dwell = 4500;
+  if (opts && opts.action) dwell = 6000;
+  if (opts && opts.dwell) dwell = opts.dwell;
   window.__toastT = setTimeout(() => { t.hidden = true; }, dwell);
+}
+
+// Soft-delete a single item with an Undo affordance. Returns the API
+// promise so callers can chain .then(loadList) etc.
+function trashWithUndo(type, id, onDone) {
+  const url = type === 'file' ? `/api/files/${id}` : `/api/folders/${id}`;
+  const restoreUrl = type === 'file' ? `/api/files/${id}/restore` : `/api/folders/${id}/restore`;
+  return api(url, { method:'DELETE' }).then(() => {
+    if (onDone) onDone();
+    toast(UI.movedToTrash, 'success', {
+      action: { label: UI.undo, fn: () => {
+        api(restoreUrl, { method:'POST' }).then(() => {
+          toast(UI.restored, 'success');
+          loadList(); loadMe();
+        }).catch(() => toast('Restore failed', 'error'));
+      }}
+    });
+  });
 }
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -496,8 +529,7 @@ function wireSwipe(row, item) {
       row.classList.add('swiped');
       setTimeout(() => {
         if (row.classList.contains('swiped') && confirm(UI.trashConfirm)) {
-          api(`/api/${item._type === 'file' ? 'files' : 'folders'}/${item.id}`, { method:'DELETE' })
-            .then(() => { toast(UI.movedToTrash, 'success'); loadList(); loadMe(); });
+          trashWithUndo(item._type, item.id, () => { loadList(); loadMe(); });
         }
         row.style.transform = ''; row.classList.remove('swiped');
       }, 1500);
@@ -681,12 +713,12 @@ $('#ctxMenu').addEventListener('click', async (e) => {
       if (!confirm('Delete forever?')) return;
       const url = type === 'file' ? `/api/files/${id}?permanent=1` : `/api/folders/${id}?permanent=1`;
       await api(url, { method:'DELETE' });
+      toast(UI.deleted, 'success');
+      closeDetails(); loadList(); loadMe();
     } else {
-      const url = type === 'file' ? `/api/files/${id}` : `/api/folders/${id}`;
-      await api(url, { method:'DELETE' });
+      // Soft-delete with Undo affordance.
+      trashWithUndo(type, id, () => { closeDetails(); loadList(); loadMe(); });
     }
-    toast(state.view === 'trash' ? UI.deleted : UI.movedToTrash, 'success');
-    closeDetails(); loadList(); loadMe();
   }
 });
 
@@ -741,8 +773,7 @@ function openDetails(item) {
     state.selected.clear(); state.selected.add(`${item._type}:${item.id}`); openMoveDialog();
   };
   $('#dpDelete').onclick = () => {
-    const url = item._type === 'file' ? `/api/files/${item.id}` : `/api/folders/${item.id}`;
-    api(url, { method:'DELETE' }).then(() => { toast(UI.movedToTrash, 'success'); closeDetails(); loadList(); loadMe(); });
+    trashWithUndo(item._type, item.id, () => { closeDetails(); loadList(); loadMe(); });
   };
   renderTagsForFile(item);
 }
