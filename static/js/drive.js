@@ -404,6 +404,10 @@ function wireItem(el, item) {
     openCtx(r.left - 180, r.bottom + 4);
   };
   el.addEventListener('click', (e) => {
+    // Swallow the synthetic click that fires after a long-press, otherwise it
+    // would either re-toggle the just-added selection or open the details
+    // panel on top of selection-mode.
+    if (el._cvLongPress) { el._cvLongPress = false; return; }
     if (e.target.closest('input,button')) return;
     if (e.ctrlKey || e.metaKey) {
       state.selected.has(key) ? state.selected.delete(key) : state.selected.add(key);
@@ -417,17 +421,22 @@ function wireItem(el, item) {
     e.preventDefault(); pickItem(item); openCtx(e.clientX, e.clientY);
   });
 
-  // Long-press for mobile multi-select
+  // Long-press for mobile multi-select.
+  // CRITICAL: do NOT preventDefault() in touchstart — that cancels the
+  // synthetic click on mobile, which silently breaks tap-to-select,
+  // tap-to-copy-link, and tap-to-open-details. Passive listener is also
+  // faster for scroll.
   let pressTimer = null;
-  el.addEventListener('touchstart', (e) => {
-    e.preventDefault();
+  el.addEventListener('touchstart', () => {
+    el._cvLongPress = false;
     pressTimer = setTimeout(() => {
+      el._cvLongPress = true;
       state.selected.add(key); el.classList.add('selected');
       const c = el.querySelector('.card-check'); if (c) c.checked = true;
       updateActionBar();
       if (navigator.vibrate) navigator.vibrate(30);
     }, 500);
-  }, {passive: false});
+  }, {passive: true});
   el.addEventListener('touchend', () => { clearTimeout(pressTimer); pressTimer = null; });
   el.addEventListener('touchmove', () => { clearTimeout(pressTimer); pressTimer = null; });
 
