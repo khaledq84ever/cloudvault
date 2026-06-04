@@ -1882,13 +1882,55 @@ def _make_shares_permanent_once() -> None:
         app.logger.warning("share permanence migration failed: %s", e)
 
 
+def _boot_schema():
+    with app.app_context():
+        db.create_all()
+        _migrate_sqlite_to_postgres()
+        _add_share_alias_column_if_missing()
+        _add_folder_share_support()
+        _make_shares_permanent_once()
+        _demote_all_users_to_free()
+
+
+_BOOT_DONE = False
+_BOOT_LOCK = threading.Lock()
+
+
+def _ensure_boot_schema():
+    """Run create_all + migrations once. Tolerate a transient DB / Railway
+    private-networking outage instead of crashing the worker — boot in degraded
+    mode and finish on the first request once connectivity heals."""
+    global _BOOT_DONE
+    if _BOOT_DONE:
+        return
+    with _BOOT_LOCK:
+        if _BOOT_DONE:
+            return
+        try:
+            _boot_schema()
+            _BOOT_DONE = True
+            app.logger.info("boot schema init OK")
+        except Exception as e:  # noqa: BLE001
+            app.logger.error("boot schema init deferred (DB unreachable?): %s", e)
+
+
+# Retry a few times at startup, but NEVER let a DB/network blip kill the worker
+# (was causing gunicorn 'Worker failed to boot' crash-loops during Railway
+# private-networking incidents). If still down, serve degraded and self-heal.
+for _a in range(6):
+    _ensure_boot_schema()
+    if _BOOT_DONE:
+        break
+    time.sleep(min(2 ** _a, 15))
+
+
+@app.before_request
+def _complete_boot_if_needed():
+    if not _BOOT_DONE:
+        _ensure_boot_schema()
+
+
 with app.app_context():
-    db.create_all()
-    _migrate_sqlite_to_postgres()
-    _add_share_alias_column_if_missing()
-    _add_folder_share_support()
-    _make_shares_permanent_once()
-    _demote_all_users_to_free()
     try:
         cols = [c["name"] for c in db.session.execute(db.text("PRAGMA table_info(file)")).mappings()]
         if "has_thumb" not in cols:
